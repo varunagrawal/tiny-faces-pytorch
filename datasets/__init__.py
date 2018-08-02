@@ -20,13 +20,13 @@ def get_dataloader(datapath, args, num_clusters=25, train=True):
     data_loader = None
 
     # directory where we'll store model weights and cluster etc
-    data_dir = "{0}_weights".format(args.dataset.lower())
-    if not osp.exists(data_dir):
-        os.mkdir(data_dir)
+    weight_dir = "weights"
+    if not osp.exists(weight_dir):
+        os.mkdir(weight_dir)
 
     dataset = WIDERFace(osp.expanduser(args.traindata), [])
 
-    cluster_file = osp.join(data_dir, "clustering.jbl")
+    cluster_file = osp.join(weight_dir, "clustering.jbl")
     if osp.exists(cluster_file):
         clusters = joblib.load(cluster_file)[num_clusters]['medoids']
     else:
@@ -44,4 +44,4 @@ def get_dataloader(datapath, args, num_clusters=25, train=True):
         batch_size=args.batch_size, shuffle=train,
         num_workers=args.workers, pin_memory=True)
 
-    return data_loader, data_dir
+    return data_loader, weight_dir

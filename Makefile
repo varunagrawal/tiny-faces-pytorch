@@ -9,7 +9,7 @@ main: cython
         $(PYTHON) main.py $(TRAINDATA) --dataset-root $(ROOT)
 
 resume: cython
-        $(PYTHON) main.py $(TRAINDATA) --dataset-root $(ROOT) --resume coco_weights/checkpoint_50.pth --epochs $(EPOCH)
+        $(PYTHON) main.py $(TRAINDATA) --dataset-root $(ROOT) --resume weights/checkpoint_50.pth --epochs $(EPOCH)
 
 evaluate: cython
         $(PYTHON) evaluate.py $(VALDATA) --dataset-root $(ROOT) --checkpoint weights/checkpoint_50.pth
