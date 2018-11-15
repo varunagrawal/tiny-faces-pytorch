@@ -30,7 +30,7 @@ def arguments():
 
 def dataloader(args):
     num_clusters = 25
-    clusters = joblib.load("coco_weights/clustering.jbl")[num_clusters]['medoids']
+    clusters = joblib.load("datasets/coco_clustering.jbl")[num_clusters]['medoids']
     clusters = np.array(clusters)
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -40,7 +40,7 @@ def dataloader(args):
         normalize
     ])
     val_loader = data.DataLoader(
-        COCO(osp.expanduser(args.valdata), clusters, train=False, img_transforms=val_transforms,
+        COCO(osp.expanduser(args.valdata), clusters, train=False, split="val", img_transforms=val_transforms,
              dataset_root=args.dataset_root, multiscale=args.multiscale),
         batch_size=1, shuffle=False,
         num_workers=args.workers, pin_memory=True)
