@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-import torchvision
+from torchvision import transforms
 from torch.nn import functional as nnfunc
 from pathlib import Path
 from tqdm import tqdm
@@ -28,8 +28,8 @@ def save_checkpoint(state, filename="checkpoint.pth.tar", save_path="weights"):
     torch.save(state, str(save_path))
 
 
-def visualize_output(img, output, clusters, proc, prob_thresh=0.55, nms_thresh=0.1):
-    tensor_to_image = torchvision.transforms.ToPILImage()
+def visualize_output(img, output, templates, proc, prob_thresh=0.55, nms_thresh=0.1):
+    tensor_to_image = transforms.ToPILImage()
 
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
@@ -38,13 +38,13 @@ def visualize_output(img, output, clusters, proc, prob_thresh=0.55, nms_thresh=0
 
     image = tensor_to_image(img[0])  # Index into the batch
 
-    cls_map = nnfunc.sigmoid(output[:, 0:clusters.shape[0], :, :]).data.cpu(
+    cls_map = nnfunc.sigmoid(output[:, 0:templates.shape[0], :, :]).data.cpu(
     ).numpy().transpose((0, 2, 3, 1))[0, :, :, :]
-    reg_map = output[:, clusters.shape[0]:, :, :].data.cpu(
+    reg_map = output[:, templates.shape[0]:, :, :].data.cpu(
     ).numpy().transpose((0, 2, 3, 1))[0, :, :, :]
 
     print(np.sort(np.unique(cls_map))[::-1])
-    proc.visualize_heatmaps(image, cls_map, reg_map, clusters,
+    proc.visualize_heatmaps(image, cls_map, reg_map, templates,
                             prob_thresh=prob_thresh, nms_thresh=nms_thresh)
 
     p = input("Continue? [Yn]")
@@ -70,7 +70,7 @@ def train(model, loss_fn, optimizer, dataloader, epoch, save_path):
 
         output = model(x)
 
-        # visualize_output(img, output, dataloader.dataset.clusters)
+        # visualize_output(img, output, dataloader.dataset.templates)
 
         loss, cls_loss, reg_loss = loss_fn(
             output, class_map_var, regression_map_var)
@@ -93,20 +93,20 @@ def train(model, loss_fn, optimizer, dataloader, epoch, save_path):
     }, filename="checkpoint_{0}.pth".format(epoch+1), save_path=save_path)
 
 
-def evaluate_multiscale(model, dataloader, clusters, prob_thresh=0.65, nms_thresh=0.3, num_clusters=25):
+def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, num_templates=25):
     print("Running multiscale evaluation code")
 
-    model.eval().cuda()
+    model = model.eval().cuda()
 
     # Multi scale stuff
     # scaling_factors = [0.25, 0.5, 1, 2]  # 2
     # scaling_factors = [0.25, 0.5, 1, 2, 4]  # 2
     # scaling_factors = [1]  # 0
     # scaling_factors = [0.25, 0.5, 0.7, 0.9, 1, 1.1, 1.5, 2]  # 4
-    scaling_factors = [0.7 ** x for x in [4, 3, 2, 1, 0, -1, -2]]
+    scales_list = [0.7 ** x for x in [4, 3, 2, 1, 0, -1]]
 
     results = []
-    to_pil_image = torchvision.transforms.ToPILImage()
+    to_pil_image = transforms.ToPILImage()
 
     for idx, (img, image_id, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):
         dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
@@ -116,10 +116,9 @@ def evaluate_multiscale(model, dataloader, clusters, prob_thresh=0.65, nms_thres
 
         min_side = np.min(image.size)
 
-        for s, scale in enumerate(scaling_factors):
+        for s, scale in enumerate(scales_list):
             # scale the images
-            scaled_image = torchvision.transforms.Resize(
-                np.int(min_side*scale))(image)
+            scaled_image = transforms.Resize(np.int(min_side*scale))(image)
             scale_factor = 1 / scale
 
             # normalize the images
@@ -132,11 +131,12 @@ def evaluate_multiscale(model, dataloader, clusters, prob_thresh=0.65, nms_thres
 
             output = model(x)
 
-            # first `num_clusters` channels are class maps
-            score_cls = torch.sigmoid(
-                output[:, :num_clusters, :, :]).data.cpu().numpy().transpose((0, 2, 3, 1))
-            score_reg = output[:, num_clusters:, :,
-                               :].data.cpu().numpy().transpose((0, 2, 3, 1))
+            # first `num_templates` channels are class maps
+            score_cls = torch.sigmoid(output[:, :num_templates, :, :])
+            score_cls = score_cls.data.cpu().numpy().transpose((0, 2, 3, 1))
+
+            score_reg = output[:, num_templates:, :, :]
+            score_reg = score_reg.data.cpu().numpy().transpose((0, 2, 3, 1))
 
             fb, fy, fx, fc = np.where(score_cls > prob_thresh)
 
@@ -146,14 +146,13 @@ def evaluate_multiscale(model, dataloader, clusters, prob_thresh=0.65, nms_thres
             rf = dataloader.dataset.rf
             strx, offset = rf['stride'], rf['offset']
             cy, cx = fy * strx[0] + offset[0], fx * strx[1] + offset[1]
-            ch, cw = clusters[fc, 3] - clusters[fc, 1] + \
-                1, clusters[fc, 2] - clusters[fc, 0] + 1
+            ch, cw = templates[fc, 3] - templates[fc, 1] + 1, templates[fc, 2] - templates[fc, 0] + 1
 
             # bounding box refinements
-            tx = score_reg[:, :, :, 0:num_clusters]
-            ty = score_reg[:, :, :, 1 * num_clusters:2 * num_clusters]
-            tw = score_reg[:, :, :, 2 * num_clusters:3 * num_clusters]
-            th = score_reg[:, :, :, 3 * num_clusters:4 * num_clusters]
+            tx = score_reg[:, :, :, 0:num_templates]
+            ty = score_reg[:, :, :, 1 * num_templates:2 * num_templates]
+            tw = score_reg[:, :, :, 2 * num_templates:3 * num_templates]
+            th = score_reg[:, :, :, 3 * num_templates:4 * num_templates]
 
             # refine the bounding boxes
             dcx = cw * tx[fb, fy, fx, fc]
@@ -214,7 +213,7 @@ def evaluate_multiscale(model, dataloader, clusters, prob_thresh=0.65, nms_thres
     print("Results saved to `predictions.json`")
 
 
-def evaluate(model, dataloader, clusters, prob_thresh, nms_thresh, num_clusters=25, debug=False):
+def evaluate(model, dataloader, templates, prob_thresh, nms_thresh, num_templates=25, debug=False):
     print("Running evaluation code")
     model.eval()
     model.cuda()
@@ -225,15 +224,15 @@ def evaluate(model, dataloader, clusters, prob_thresh, nms_thresh, num_clusters=
         x = img.float().cuda()
         output = model(x)
 
-        # first n_clusters channels are class maps
+        # first n_templates channels are class maps
         score_cls = torch.sigmoid(
-            output[:, :num_clusters, :, :]).data.cpu().numpy().transpose((0, 2, 3, 1))
-        score_reg = output[:, num_clusters:, :,
+            output[:, :num_templates, :, :]).data.cpu().numpy().transpose((0, 2, 3, 1))
+        score_reg = output[:, num_templates:, :,
                            :].data.cpu().numpy().transpose((0, 2, 3, 1))
         # print(score_reg.max(), score_reg.min())
 
         if debug:
-            visualize_output(img, output, dataloader.dataset.clusters,
+            visualize_output(img, output, dataloader.dataset.templates,
                              dataloader.dataset.processor, prob_thresh, nms_thresh)
 
         fb, fy, fx, fc = np.where(score_cls > prob_thresh)
@@ -244,14 +243,14 @@ def evaluate(model, dataloader, clusters, prob_thresh, nms_thresh, num_clusters=
         rf = dataloader.dataset.rf
         strx, offset = rf['stride'], rf['offset']
         cy, cx = fy*strx[0] + offset[0], fx*strx[1] + offset[1]
-        ch, cw = clusters[fc, 3] - clusters[fc, 1] + \
-            1, clusters[fc, 2] - clusters[fc, 0] + 1
+        ch, cw = templates[fc, 3] - templates[fc, 1] + \
+            1, templates[fc, 2] - templates[fc, 0] + 1
 
         # bounding box refinements
-        tx = score_reg[:, :, :, 0:num_clusters]
-        ty = score_reg[:, :, :, 1 * num_clusters:2 * num_clusters]
-        tw = score_reg[:, :, :, 2 * num_clusters:3 * num_clusters]
-        th = score_reg[:, :, :, 3 * num_clusters:4 * num_clusters]
+        tx = score_reg[:, :, :, 0:num_templates]
+        ty = score_reg[:, :, :, 1 * num_templates:2 * num_templates]
+        tw = score_reg[:, :, :, 2 * num_templates:3 * num_templates]
+        th = score_reg[:, :, :, 3 * num_templates:4 * num_templates]
 
         # refine the bounding boxes
         dcx = cw * tx[fb, fy, fx, fc]
