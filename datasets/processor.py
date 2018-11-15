@@ -18,12 +18,12 @@ class DataProcessor:
 
     The idea is that this can act as a mixin that enables torch dataloaders with the heatmap generation semantics.
     """
-    def __init__(self, input_size, heatmap_size, pos_thresh, neg_thresh, clusters, img_means=None, rf=None):
+    def __init__(self, input_size, heatmap_size, pos_thresh, neg_thresh, templates, img_means=None, rf=None):
         self.input_size = input_size
         self.heatmap_size = heatmap_size
         self.pos_thresh = pos_thresh
         self.neg_thresh = neg_thresh
-        self.clusters = clusters
+        self.templates = templates
         self.rf = rf
         self.ofy, self.ofx = rf['offset']
         self.sty, self.stx = rf['stride']
@@ -164,10 +164,10 @@ class DataProcessor:
                                          ofy + np.array(range(vsy)) * sty)
 
         # each cluster is [x1, y1, x2, y2]
-        dx1 = self.clusters[:, 0]
-        dy1 = self.clusters[:, 1]
-        dx2 = self.clusters[:, 2]
-        dy2 = self.clusters[:, 3]
+        dx1 = self.templates[:, 0]
+        dy1 = self.templates[:, 1]
+        dx2 = self.templates[:, 2]
+        dy2 = self.templates[:, 3]
 
         # compute the bounds
         # We add new axes so that the arrays are numpy broadcasting compatible
@@ -250,7 +250,7 @@ class DataProcessor:
         sty, stx = self.rf['stride']
         vsy, vsx = self.heatmap_size
 
-        nt = self.clusters.shape[0]
+        nt = self.templates.shape[0]
         # Initiate heatmaps
         class_maps = -np.ones((vsy, vsx, nt))
         regress_maps = np.zeros((vsy, vsx, nt * 4))
@@ -260,8 +260,8 @@ class DataProcessor:
         # dx, dy = np.floor((w - self.input_size[1]) * )
 
         # each cluster is [-w/2, -h/2, w/2, h/2]
-        dx1, dx2 = self.clusters[:, 0], self.clusters[:, 2]
-        dy1, dy2 = self.clusters[:, 1], self.clusters[:, 3]
+        dx1, dx2 = self.templates[:, 0], self.templates[:, 2]
+        dy1, dy2 = self.templates[:, 1], self.templates[:, 3]
 
         # Filter out invalid bbox
         invalid = np.logical_or(bboxes[:, 2] <= bboxes[:, 0], bboxes[:, 3] <= bboxes[:, 1])
@@ -269,7 +269,7 @@ class DataProcessor:
         bboxes = np.delete(bboxes, ind, axis=0)
 
         ng = bboxes.shape[0]
-        iou = np.zeros((vsy, vsx, self.clusters.shape[0], bboxes.shape[0]))
+        iou = np.zeros((vsy, vsx, self.templates.shape[0], bboxes.shape[0]))
 
         if ng > 0:
             gx1, gy1, gx2, gy2 = bboxes[:, 0], bboxes[:, 1], bboxes[:, 2], bboxes[:, 3]
@@ -344,7 +344,7 @@ class DataProcessor:
 
         image.save("{0}/{1}.jpg".format(directory, image_id))
 
-    def visualize_heatmaps(self, img, cls_map, reg_map, clusters, prob_thresh=1, nms_thresh=1, iou=None):
+    def visualize_heatmaps(self, img, cls_map, reg_map, templates, prob_thresh=1, nms_thresh=1, iou=None):
         """
         Expect cls_map and reg_map to be of the form HxWxC
         """
@@ -356,17 +356,17 @@ class DataProcessor:
         # fy, fx, fc = np.where(best_iou >= 0.5)  # neg thresh
 
         cy, cx = fy*self.sty + self.ofy, fx*self.stx + self.ofx
-        cw = clusters[fc, 2] - clusters[fc, 0] + 1
-        ch = clusters[fc, 3] - clusters[fc, 1] + 1
+        cw = templates[fc, 2] - templates[fc, 0] + 1
+        ch = templates[fc, 3] - templates[fc, 1] + 1
 
         # box_ovlp = best_iou[fc, fy, fx]
-        num_clusters = clusters.shape[0]
+        num_templates = templates.shape[0]
 
         # refine bounding box
-        tx = reg_map[:, :, 0*num_clusters:1*num_clusters]
-        ty = reg_map[:, :, 1*num_clusters:2*num_clusters]
-        tw = reg_map[:, :, 2*num_clusters:3*num_clusters]
-        th = reg_map[:, :, 3*num_clusters:4*num_clusters]
+        tx = reg_map[:, :, 0*num_templates:1*num_templates]
+        ty = reg_map[:, :, 1*num_templates:2*num_templates]
+        tw = reg_map[:, :, 2*num_templates:3*num_templates]
+        th = reg_map[:, :, 3*num_templates:4*num_templates]
 
         dcx = cw * tx[fy, fx, fc]
         dcy = ch * ty[fy, fx, fc]
