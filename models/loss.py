@@ -10,7 +10,7 @@ class AvgMeter:
     def update(self, loss, sz):
         n = self.num_averaged
         m = n + sz
-        self.average = ((n * self.average) + loss) / m
+        self.average = ((n * self.average) + float(loss)) / m
         self.num_averaged = m
 
     def reset(self):
@@ -26,8 +26,8 @@ class DetectionCriterion(nn.Module):
         super().__init__()
 
         # We don't want per element averaging. We want to normalize over the batch or positive samples.
-        self.regression_criterion = nn.SmoothL1Loss(reduce=False)
-        self.classification_criterion = nn.SoftMarginLoss(reduce=False)
+        self.regression_criterion = nn.SmoothL1Loss(reduction='none')
+        self.classification_criterion = nn.SoftMarginLoss(reduction='none')
         self.n_templates = n_templates
         self.reg_weight = reg_weight
 
