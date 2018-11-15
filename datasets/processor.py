@@ -195,7 +195,10 @@ class DataProcessor:
         """
         ofx, ofy = self.rf['offset']
         stx, sty = self.rf['stride']
-        vsx, vsy = self.heatmap_size
+        vsy, vsx = self.heatmap_size
+
+        coarse_xx, coarse_yy = np.meshgrid(ofx + np.array(range(vsx)) * stx,
+                                           ofy + np.array(range(vsy)) * sty)
 
         dx1, dy1, dx2, dy2 = cluster_boxes
 
@@ -212,8 +215,6 @@ class DataProcessor:
 
         fcx = (fxx1 + fxx2) / 2
         fcy = (fyy1 + fyy2) / 2
-
-        coarse_xx, coarse_yy = np.meshgrid(ofx + np.array(range(vsx)) * stx, ofy + np.array(range(vsy)) * sty)
 
         tx = np.divide((fcx - coarse_xx.reshape(vsy, vsx, 1, 1)), dww)
         ty = np.divide((fcy - coarse_yy.reshape(vsy, vsx, 1, 1)), dhh)
@@ -234,12 +235,12 @@ class DataProcessor:
         tx = tx[idx0, idx1, idx2, best_obj_per_loc]
         ty = ty[idx0, idx1, idx2, best_obj_per_loc]
 
-        tw = np.repeat(tw, self.heatmap_size[1], axis=1)  # (1, vsx, N, bboxes)
-        tw = np.repeat(tw, self.heatmap_size[0], axis=0)  # (vsy, vsx, N, bboxes)
+        tw = np.repeat(tw, vsy, axis=0)  # (vsy, 1, N, bboxes)
+        tw = np.repeat(tw, vsx, axis=1)  # (vsy, vsx, N, bboxes)
         tw = tw[idx0, idx1, idx2, best_obj_per_loc]
 
-        th = np.repeat(th, self.heatmap_size[1], axis=0)
-        th = np.repeat(th, self.heatmap_size[0], axis=1)
+        th = np.repeat(th, vsy, axis=0)
+        th = np.repeat(th, vsx, axis=1)
         th = th[idx0, idx1, idx2, best_obj_per_loc]
 
         return np.concatenate((tx, ty, tw, th), axis=2), iou
