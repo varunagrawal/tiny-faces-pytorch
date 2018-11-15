@@ -61,7 +61,7 @@ def train(model, loss_fn, optimizer, dataloader, epoch, save_path):
     model = model.cuda()
 
     for idx, (img, class_map, regression_map) in enumerate(dataloader):
-        x = img.float().cuda(async=True)
+        x = img.float().cuda()
 
         class_map_var = class_map.float().cuda()
         regression_map_var = regression_map.float().cuda()
@@ -128,7 +128,7 @@ def evaluate_multiscale(model, dataloader, clusters, prob_thresh=0.65, nms_thres
             img.unsqueeze_(0)
 
             # now run the model
-            x = img.cuda(async=True)
+            x = img.float().cuda()
 
             output = model(x)
 
@@ -222,7 +222,7 @@ def evaluate(model, dataloader, clusters, prob_thresh, nms_thresh, num_clusters=
     results = []
 
     for idx, (img, image_id, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):
-        x = img.cuda(async=True)
+        x = img.float().cuda()
         output = model(x)
 
         # first n_clusters channels are class maps
