@@ -157,8 +157,8 @@ class DataProcessor:
         :param paste_box: [x1, y1, x2, y2]
         :return:
         """
-        ofx, ofy = self.rf['offset']
-        stx, sty = self.rf['stride']
+        ofy, ofx = self.rf['offset']
+        sty, stx = self.rf['stride']
         vsy, vsx = self.heatmap_size
         coarse_x, coarse_y = np.meshgrid(ofx + np.array(range(vsx)) * stx,
                                          ofy + np.array(range(vsy)) * sty)
@@ -193,8 +193,8 @@ class DataProcessor:
         :param iou:
         :return:
         """
-        ofx, ofy = self.rf['offset']
-        stx, sty = self.rf['stride']
+        ofy, ofx = self.rf['offset']
+        sty, stx = self.rf['stride']
         vsy, vsx = self.heatmap_size
 
         coarse_xx, coarse_yy = np.meshgrid(ofx + np.array(range(vsx)) * stx,
@@ -246,8 +246,8 @@ class DataProcessor:
         return np.concatenate((tx, ty, tw, th), axis=2), iou
 
     def get_heatmaps(self, bboxes, pad_mask):
-        ofx, ofy = self.rf['offset']
-        stx, sty = self.rf['stride']
+        ofy, ofx = self.rf['offset']
+        sty, stx = self.rf['stride']
         vsy, vsx = self.heatmap_size
 
         nt = self.clusters.shape[0]
