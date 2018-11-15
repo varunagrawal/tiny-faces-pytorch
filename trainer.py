@@ -119,7 +119,6 @@ def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thre
         for s, scale in enumerate(scales_list):
             # scale the images
             scaled_image = transforms.Resize(np.int(min_side*scale))(image)
-            scale_factor = 1 / scale
 
             # normalize the images
             img = dataloader.dataset.transforms(scaled_image)
@@ -178,9 +177,9 @@ def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thre
             t_bboxes = t_bboxes[0]
 
             # scale the bboxes
-            t_bboxes = t_bboxes * scale_factor
+            t_bboxes = t_bboxes / scale
 
-            scales = np.ones((t_bboxes.shape[0], 1)) * scale_factor
+            scales = np.ones((t_bboxes.shape[0], 1)) / scale
             # append scores at the end for NMS
             d = np.hstack((t_bboxes, scores, scales))
 
