@@ -248,11 +248,12 @@ class DataProcessor:
     def get_heatmaps(self, bboxes, pad_mask):
         ofx, ofy = self.rf['offset']
         stx, sty = self.rf['stride']
-        vsx, vsy = self.heatmap_size
+        vsy, vsx = self.heatmap_size
 
+        nt = self.clusters.shape[0]
         # Initiate heatmaps
-        class_maps = -np.ones((vsy, vsx, len(self.clusters)))
-        regress_maps = np.zeros((vsy, vsx, len(self.clusters) * 4))
+        class_maps = -np.ones((vsy, vsx, nt))
+        regress_maps = np.zeros((vsy, vsx, nt * 4))
 
         # h, w, c = img.shape
         # TODO figure out what this is supposed to do L309 in cnn_get_batch_hardmine.m
