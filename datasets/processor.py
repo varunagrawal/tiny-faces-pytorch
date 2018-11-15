@@ -159,9 +159,9 @@ class DataProcessor:
         """
         ofx, ofy = self.rf['offset']
         stx, sty = self.rf['stride']
-        vsx, vsy = self.heatmap_size
-        coarse_x, coarse_y = np.meshgrid(ofx-1 + np.array(range(vsx)) * stx,
-                                         ofy-1 + np.array(range(vsy)) * sty)
+        vsy, vsx = self.heatmap_size
+        coarse_x, coarse_y = np.meshgrid(ofx + np.array(range(vsx)) * stx,
+                                         ofy + np.array(range(vsy)) * sty)
 
         # each cluster is [x1, y1, x2, y2]
         dx1 = self.clusters[:, 0]
