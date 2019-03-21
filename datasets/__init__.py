@@ -35,4 +35,4 @@ def get_dataloader(datapath, args, num_templates=25,
                                   batch_size=args.batch_size, shuffle=train,
                                   num_workers=args.workers, pin_memory=True)
 
-    return data_loader
+    return data_loader, templates
