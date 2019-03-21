@@ -8,7 +8,7 @@ from torchvision import transforms
 
 
 class WIDERFace(dataset.Dataset):
-    def __init__(self, path,  clusters, img_transforms=None, dataset_root="", train=True,
+    def __init__(self, path,  templates, img_transforms=None, dataset_root="", split="train", train=True,
                  input_size=(500, 500), heatmap_size=(63, 63),
                  pos_thresh=0.7, neg_thresh=0.3, pos_fraction=0.5, debug=False):
         super().__init__()
@@ -20,7 +20,10 @@ class WIDERFace(dataset.Dataset):
         print("{0} samples in the dataset".format(len(self.data)))
         # self.data = data
 
-        self.clusters = clusters
+        # canonical object templates obtained via clustering
+        # NOTE we directly use the values from Peiyun's repository stored in "templates.json"
+        self.templates = templates
+
         self.transforms = img_transforms
         self.dataset_root = Path(dataset_root)
         self.input_size = input_size
@@ -36,13 +39,11 @@ class WIDERFace(dataset.Dataset):
             'offset': [-1, -1]
         }
 
-        if train:
-            self.split = 'train'
-        else:
-            self.split = 'val'
+        self.split = split
 
-        self.processor = DataProcessor(
-            input_size, heatmap_size, pos_thresh, neg_thresh, clusters, rf=self.rf)
+        self.processor = DataProcessor(input_size, heatmap_size,
+                                       pos_thresh, neg_thresh,
+                                       templates, rf=self.rf)
         self.debug = debug
 
     def load(self, path):
@@ -65,8 +66,7 @@ class WIDERFace(dataset.Dataset):
                 idx += 1
 
             # remove invalid bboxes where w or h are 0
-            invalid = np.where(np.logical_or(
-                bboxes[:, 2] == 0, bboxes[:, 3] == 0))
+            invalid = np.where(np.logical_or(bboxes[:, 2] == 0, bboxes[:, 3] == 0))
             bboxes = np.delete(bboxes, invalid, 0)
 
             # convert to (x1, y1, x2, y2)
@@ -75,8 +75,7 @@ class WIDERFace(dataset.Dataset):
             bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3] - 1
 
             # bounding boxes are 1 indexed
-            bboxes = bboxes - 1
-
+            bboxes[:, 0:4] = bboxes[:, 0:4] - 1
             d = {
                 "img_path": img,
                 "bboxes": bboxes[:, 0:4],
@@ -101,6 +100,7 @@ class WIDERFace(dataset.Dataset):
         return len(self.data)
 
     def process_inputs(self, image, bboxes):
+
         # Randomly resize the image
         rnd = np.random.rand()
         if rnd < 1 / 3:
@@ -115,24 +115,28 @@ class WIDERFace(dataset.Dataset):
             image = transforms.functional.resize(image, scaled_shape)
             bboxes = bboxes * 2
 
+        # convert from PIL Image to ndarray
         img = np.array(image)
-
-        img, bboxes, paste_box = self.processor.crop_image(img, bboxes)
-        pad_mask = self.processor.get_padding(paste_box)
 
         # Random Flip
         if np.random.rand() > 0.5:
             img = np.fliplr(img).copy()  # flip the image
-            pad_mask = np.fliplr(pad_mask).copy()  # flip the padding mask
             lx1, lx2 = np.array(bboxes[:, 0]), np.array(bboxes[:, 2])
             bboxes[:, 0] = self.input_size[1] - lx2 - 1
             # Flip the bounding box. -1 for correct indexing
             bboxes[:, 2] = self.input_size[1] - lx1 - 1
 
-        class_maps, regress_maps, iou = self.processor.get_heatmaps(bboxes, pad_mask)
+        # Get a random crop of the image and keep only relevant bboxes
+        img, bboxes, paste_box = self.processor.crop_image(img, bboxes)
+        pad_mask = self.processor.get_padding(paste_box)
+
+        # Get the ground truth class and regression maps
+        class_maps, regress_maps, iou = self.processor.get_heatmaps(
+            bboxes, pad_mask)
 
         # perform balance sampling so there are roughly the same number of positive and negative samples.
-        class_maps = self.processor.balance_sampling(class_maps, self.pos_fraction)
+        class_maps = self.processor.balance_sampling(
+            class_maps, self.pos_fraction)
 
         if self.debug:
             # Confirm is balance sampling works
@@ -143,7 +147,7 @@ class WIDERFace(dataset.Dataset):
             self.processor.visualize_bboxes(
                 Image.fromarray(img.astype('uint8'), 'RGB'), bboxes)
             self.processor.visualize_heatmaps(Image.fromarray(img.astype('uint8'), 'RGB'),
-                                              class_maps, regress_maps, self.clusters, iou=iou)
+                                              class_maps, regress_maps, self.templates, iou=iou)
 
             # and now we exit
             exit(0)
@@ -160,11 +164,8 @@ class WIDERFace(dataset.Dataset):
     def __getitem__(self, index):
         d = self.data[index]
 
-        image_id = ann['image']["id"]
-        labels = [x['category_id'] for x in ground_truth]
-
         bboxes = d['bboxes']
-        image_path = d['img_path']
+        image_path = self.dataset_root / "WIDER_{0}".format(self.split) / "images" / d['img_path']
 
         if self.debug:
             if bboxes.shape[0] == 0:
