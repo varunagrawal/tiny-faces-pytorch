@@ -4,7 +4,7 @@ This is a PyTorch implementation of Peiyun Hu's [awesome tiny face detector](htt
 
 We use (and recommend) **Python 3.6+** for minimal pain when using this codebase (plus Python 3.6 has really cool features).
 
-**NOTE** Be sure to cite Peiyun's CVPR paper if you use this repository!
+**NOTE** Be sure to cite Peiyun's CVPR paper and this repo if you use this code!
 
 ## Getting Started
 
