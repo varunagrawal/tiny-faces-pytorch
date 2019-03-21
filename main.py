@@ -6,6 +6,8 @@ from models.loss import DetectionCriterion
 from datasets import get_dataloader
 import trainer
 
+import os, os.path as osp
+
 
 def arguments():
     parser = argparse.ArgumentParser()
@@ -28,12 +30,17 @@ def arguments():
 def main():
     args = arguments()
 
-    num_templates = 25  # 29  # 25  # aka the number of clusters
+    num_templates = 25  # aka the number of clusters
 
-    train_loader, weights_dir = get_dataloader(args.traindata, args, num_templates)
-
+    train_loader = get_dataloader(args.traindata, args, num_templates)
+    
     model = DetectionModel(num_objects=1, num_templates=num_templates)
     loss_fn = DetectionCriterion(num_templates)
+
+    # directory where we'll store model weights
+    weights_dir = "weights"
+    if not osp.exists(weights_dir):
+        os.mkdir(weights_dir)
 
     optimizer = optim.SGD(model.learnable_parameters(args.lr), lr=args.lr, momentum=args.momentum,
                           weight_decay=args.weight_decay)
