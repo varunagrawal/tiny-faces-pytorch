@@ -1,18 +1,20 @@
 .RECIPEPREFIX +=
 
 PYTHON=python3
-ROOT=~/datasets/WIDER
+ROOT=data/WIDER
 TRAINDATA=$(ROOT)/wider_face_split/wider_face_train_bbx_gt.txt
 VALDATA=$(ROOT)/wider_face_split/wider_face_val_bbx_gt.txt
+
+CHECKPOINT=weights/checkpoint_50.pth
 
 main: cython
         $(PYTHON) main.py $(TRAINDATA) --dataset-root $(ROOT)
 
 resume: cython
-        $(PYTHON) main.py $(TRAINDATA) --dataset-root $(ROOT) --resume weights/checkpoint_50.pth --epochs $(EPOCH)
+        $(PYTHON) main.py $(TRAINDATA) --dataset-root $(ROOT) --resume $(CHECKPOINT) --epochs $(EPOCH)
 
 evaluate: cython
-        $(PYTHON) evaluate.py $(VALDATA) --dataset-root $(ROOT) --checkpoint weights/checkpoint_50.pth
+        $(PYTHON) evaluate.py $(VALDATA) --dataset-root $(ROOT) --checkpoint $(CHECKPOINT)
 
 cluster: cython
         cd utils; $(PYTHON) cluster.py $(TRAIN_INSTANCES)
