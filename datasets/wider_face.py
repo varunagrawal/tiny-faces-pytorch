@@ -101,10 +101,23 @@ class WIDERFace(dataset.Dataset):
         return len(self.data)
 
     def process_inputs(self, image, bboxes):
+        # Randomly resize the image
+        rnd = np.random.rand()
+        if rnd < 1 / 3:
+            # resize by half
+            scaled_shape = (int(0.5 * image.height), int(0.5 * image.width))
+            image = transforms.functional.resize(image, scaled_shape)
+            bboxes = bboxes / 2
+
+        elif rnd > 2 / 3:
+            # double size
+            scaled_shape = (int(2 * image.height), int(2 * image.width))
+            image = transforms.functional.resize(image, scaled_shape)
+            bboxes = bboxes * 2
+
         img = np.array(image)
 
-        img, bboxes, paste_box, crop_box = self.processor.crop_image(
-            img, bboxes)
+        img, bboxes, paste_box = self.processor.crop_image(img, bboxes)
         pad_mask = self.processor.get_padding(paste_box)
 
         # Random Flip
@@ -116,20 +129,15 @@ class WIDERFace(dataset.Dataset):
             # Flip the bounding box. -1 for correct indexing
             bboxes[:, 2] = self.input_size[1] - lx1 - 1
 
-        class_maps, regress_maps, iou = self.processor.get_heatmaps(
-            bboxes, pad_mask)
+        class_maps, regress_maps, iou = self.processor.get_heatmaps(bboxes, pad_mask)
 
         # perform balance sampling so there are roughly the same number of positive and negative samples.
-        class_maps = self.processor.balance_sampling(
-            class_maps, self.pos_fraction)
+        class_maps = self.processor.balance_sampling(class_maps, self.pos_fraction)
 
         if self.debug:
-            # print("Positives", class_maps[class_maps == 1].sum())
-            # print(class_maps[class_maps == -1].sum())
-
             # Confirm is balance sampling works
-            print(class_maps[class_maps == 1].sum())
-            print(class_maps[class_maps == -1].sum())
+            print("Positives", class_maps[class_maps == 1].sum())
+            print("Negatives", class_maps[class_maps == -1].sum())
 
             # Visualize stuff
             self.processor.visualize_bboxes(

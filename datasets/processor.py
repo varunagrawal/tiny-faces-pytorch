@@ -303,10 +303,6 @@ class DataProcessor:
         class_maps[non_neg_border] = 0
         regress_maps[np.repeat(non_neg_border, 4, 2)] = 0
 
-        # ind = np.ravel_multi_index(np.where(class_maps==1), class_maps.shape)
-        # print(ind)
-        # print(class_maps[np.unravel_index(ind[0], class_maps.shape)])
-
         # Return heatmaps
         return class_maps, regress_maps, iou
 
