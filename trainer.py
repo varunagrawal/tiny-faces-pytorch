@@ -5,6 +5,7 @@ from torch.nn import functional as nnfunc
 from pathlib import Path
 from tqdm import tqdm
 from utils.nms import nms
+from models.utils import get_bboxes
 import json
 
 
@@ -92,18 +93,20 @@ def train(model, loss_fn, optimizer, dataloader, epoch, save_path, device):
     }, filename="checkpoint_{0}.pth".format(epoch+1), save_path=save_path)
 
 
-def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, num_templates=25, device=None):
+def evaluate(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, device=None):
+    #TODO check Peiyun's code to see the correct way to perform NMS
     print("Running multiscale evaluation code")
 
     model = model.eval().to(device)
 
-    # Multi scale stuff
+    # Evaluate over multiple scale
     scales_list = [0.5 ** x for x in [1, 0, -1]]
+    num_templates = templates.shape[0]
 
     results = []
     to_pil_image = transforms.ToPILImage()
 
-    for idx, (img, image_id, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):
+    for idx, (img, filename) in tqdm(enumerate(dataloader), total=len(dataloader)):
         dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
 
         # convert tensor to PIL image so we can perform resizing
@@ -117,6 +120,7 @@ def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thre
 
             # normalize the images
             img = dataloader.dataset.transforms(scaled_image)
+
             # add batch dimension
             img.unsqueeze_(0)
 
@@ -132,48 +136,7 @@ def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thre
             score_reg = output[:, num_templates:, :, :]
             score_reg = score_reg.data.cpu().numpy().transpose((0, 2, 3, 1))
 
-            fb, fy, fx, fc = np.where(score_cls > prob_thresh)
-
-            scores = score_cls[fb, fy, fx, fc]
-            scores = scores.reshape((scores.shape[0], 1))
-
-            rf = dataloader.dataset.rf
-            strx, offset = rf['stride'], rf['offset']
-            cy, cx = fy * strx[0] + offset[0], fx * strx[1] + offset[1]
-            ch, cw = templates[fc, 3] - templates[fc, 1] + \
-                1, templates[fc, 2] - templates[fc, 0] + 1
-
-            # bounding box refinements
-            tx = score_reg[:, :, :, 0:num_templates]
-            ty = score_reg[:, :, :, 1 * num_templates:2 * num_templates]
-            tw = score_reg[:, :, :, 2 * num_templates:3 * num_templates]
-            th = score_reg[:, :, :, 3 * num_templates:4 * num_templates]
-
-            # refine the bounding boxes
-            dcx = cw * tx[fb, fy, fx, fc]
-            dcy = ch * ty[fb, fy, fx, fc]
-
-            rcx = cx + dcx
-            rcy = cy + dcy
-
-            rcw = cw * np.exp(tw[fb, fy, fx, fc])
-            rch = ch * np.exp(th[fb, fy, fx, fc])
-
-            # create bbox array and scale the coords
-            rcx = rcx.reshape((rcx.shape[0], 1))
-            rcy = rcy.reshape((rcy.shape[0], 1))
-            rcw = rcw.reshape((rcw.shape[0], 1))
-            rch = rch.reshape((rch.shape[0], 1))
-
-            # transpose so that it is (N, 4)
-            t_bboxes = np.array(
-                [rcx - rcw / 2, rcy - rch / 2, rcx + rcw / 2, rcy + rch / 2]).T
-
-            # bboxes has a channel dim
-            t_bboxes = t_bboxes[0]
-
-            # scale the bboxes
-            t_bboxes = t_bboxes / scale
+            t_bboxes, scores = get_bboxes(score_cls, score_reg, templates, prob_thresh, dataloader.dataset.rf, scale)
 
             scales = np.ones((t_bboxes.shape[0], 1)) / scale
             # append scores at the end for NMS
@@ -185,111 +148,4 @@ def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thre
         keep = nms(dets, nms_thresh)
         dets = dets[keep]
 
-        # draw_bboxes(imgs[i], "{0}_{1}".format(image_id.item(), i), d[:, 0:4], dataloader.dataset.processor)
-        # draw_bboxes(image, "{0}".format(image_id.item()),
-        #             dets[:, 0:4], dets[:, 4], 1/dets[:, 5], dataloader.dataset.processor)
-
-        # Save to COCO Evaluation format
-        bb = dets[:, 0:4]
-        bb[:, 2] = bb[:, 2] - bb[:, 0] + 1
-        bb[:, 3] = bb[:, 3] - bb[:, 1] + 1
-
-        for ind in range(bb.shape[0]):
-            results.append({
-                "image_id": image_id[0].item(),
-                "category_id": 3,
-                "bbox": bb[ind, :].tolist(),
-                "score": dets[ind, 4].tolist()
-            })
-
-    with open("predictions.json", "w") as pred_file:
-        json.dump(results, pred_file)
-
-    print("Results saved to `predictions.json`")
-
-
-def evaluate(model, dataloader, templates, prob_thresh, nms_thresh, num_templates=25, debug=False, device=None):
-    print("Running evaluation code")
-    model.eval()
-    model.to(device)
-
-    results = []
-
-    for idx, (img, image_id, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):
-        x = img.float().to(device)
-        output = model(x)
-
-        # first n_templates channels are class maps
-        score_cls = torch.sigmoid(
-            output[:, :num_templates, :, :]).data.cpu().numpy().transpose((0, 2, 3, 1))
-        score_reg = output[:, num_templates:, :,
-                           :].data.cpu().numpy().transpose((0, 2, 3, 1))
-        # print(score_reg.max(), score_reg.min())
-
-        if debug:
-            visualize_output(img, output, dataloader.dataset.templates,
-                             dataloader.dataset.processor, prob_thresh, nms_thresh)
-
-        fb, fy, fx, fc = np.where(score_cls > prob_thresh)
-
-        scores = score_cls[fb, fy, fx, fc]
-        scores = scores.reshape((scores.shape[0], 1))
-
-        rf = dataloader.dataset.rf
-        strx, offset = rf['stride'], rf['offset']
-        cy, cx = fy*strx[0] + offset[0], fx*strx[1] + offset[1]
-        ch, cw = templates[fc, 3] - templates[fc, 1] + \
-            1, templates[fc, 2] - templates[fc, 0] + 1
-
-        # bounding box refinements
-        tx = score_reg[:, :, :, 0:num_templates]
-        ty = score_reg[:, :, :, 1 * num_templates:2 * num_templates]
-        tw = score_reg[:, :, :, 2 * num_templates:3 * num_templates]
-        th = score_reg[:, :, :, 3 * num_templates:4 * num_templates]
-
-        # refine the bounding boxes
-        dcx = cw * tx[fb, fy, fx, fc]
-        dcy = ch * ty[fb, fy, fx, fc]
-
-        rcx = cx + dcx
-        rcy = cy + dcy
-
-        rcw = cw * np.exp(tw[fb, fy, fx, fc])
-        rch = ch * np.exp(th[fb, fy, fx, fc])
-
-        # create bbox array and scale the coords
-        rcx = rcx.reshape((rcx.shape[0], 1))
-        rcy = rcy.reshape((rcy.shape[0], 1))
-        rcw = rcw.reshape((rcw.shape[0], 1))
-        rch = rch.reshape((rch.shape[0], 1))
-
-        # transpose so that it is (1, N, 4) not (4, N, 1)
-        t_bboxes = np.array([rcx-rcw/2, rcy-rch/2, rcx+rcw/2, rcy+rch/2]).T
-
-        t_bboxes = t_bboxes[0]
-
-        # append scores at the end for NMS
-        dets = np.hstack((t_bboxes, scores))
-
-        keep = nms(dets, nms_thresh)
-        dets = dets[keep]
-
-        # draw_bboxes(img, image_id, dets[:, 0:4], dataloader.dataset.processor)
-
-        # Save to COCO Evaluation format
-        bb = dets[:, 0:4]
-        bb[:, 2] = bb[:, 2] - bb[:, 0] + 1
-        bb[:, 3] = bb[:, 3] - bb[:, 1] + 1
-
-        for ind in range(bb.shape[0]):
-            results.append({
-                "image_id": image_id[0].item(),
-                "category_id": 3,
-                "bbox": bb[ind, :].tolist(),
-                "score": dets[ind, 4].tolist()
-            })
-
-    with open("predictions.json", "w") as pred_file:
-        json.dump(results, pred_file)
-
-    print("Results saved to `predictions.json`")
+    return dets
