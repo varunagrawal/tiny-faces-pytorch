@@ -6,13 +6,14 @@ from torchvision.models import resnet50, resnet101
 
 class DetectionModel(nn.Module):
     """
-
+    Hybrid Model from Tiny Faces paper
     """
 
     def __init__(self, base_model=resnet101, num_templates=1, num_objects=1):
         super().__init__()
         output = (num_objects + 4)*num_templates  # 4 is for the bounding box offsets
         self.model = base_model(pretrained=True)
+        
         self.score_res3 = nn.Conv2d(in_channels=512, out_channels=output, kernel_size=1)
         self.score_res4 = nn.Conv2d(in_channels=1024, out_channels=output, kernel_size=1)
 
@@ -84,7 +85,10 @@ class DetectionModel(nn.Module):
                 cropu = -score4.size(3)
 
             score4 = score4[:, :, 0:-cropv, 0:-cropu]
-
+        else:
+            # match the dimensions arbitrarily
+            score4 = score4[:, :, 0:score_res3.size(2), 0:score_res3.size(3)]
+            
         score = score_res3 + score4
 
         return score

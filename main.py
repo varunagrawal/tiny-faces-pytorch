@@ -1,7 +1,7 @@
 import argparse
 import torch
 from torch import optim
-from models.models import DetectionModel
+from models.model import DetectionModel
 from models.loss import DetectionCriterion
 from datasets import get_dataloader
 import trainer
