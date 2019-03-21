@@ -56,15 +56,15 @@ def draw_bboxes(image, img_id, bboxes, scores, scales, processor):
     processor.render_and_save_bboxes(image, img_id, bboxes, scores, scales)
 
 
-def train(model, loss_fn, optimizer, dataloader, epoch, save_path):
+def train(model, loss_fn, optimizer, dataloader, epoch, save_path, device):
     model = model.train()
-    model = model.cuda()
+    model = model.to(device)
 
     for idx, (img, class_map, regression_map) in enumerate(dataloader):
-        x = img.float().cuda()
+        x = img.float().to(device)
 
-        class_map_var = class_map.float().cuda()
-        regression_map_var = regression_map.float().cuda()
+        class_map_var = class_map.float().to(device)
+        regression_map_var = regression_map.float().to(device)
 
         optimizer.zero_grad()
 
@@ -72,8 +72,8 @@ def train(model, loss_fn, optimizer, dataloader, epoch, save_path):
 
         # visualize_output(img, output, dataloader.dataset.templates)
 
-        loss, cls_loss, reg_loss = loss_fn(
-            output, class_map_var, regression_map_var)
+        loss, cls_loss, reg_loss = loss_fn(output,
+                                           class_map_var, regression_map_var)
 
         # Get the gradients
         # torch will automatically mask the gradients to 0 where applicable!
@@ -93,17 +93,13 @@ def train(model, loss_fn, optimizer, dataloader, epoch, save_path):
     }, filename="checkpoint_{0}.pth".format(epoch+1), save_path=save_path)
 
 
-def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, num_templates=25):
+def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, num_templates=25, device=None):
     print("Running multiscale evaluation code")
 
-    model = model.eval().cuda()
+    model = model.eval().to(device)
 
     # Multi scale stuff
-    # scaling_factors = [0.25, 0.5, 1, 2]  # 2
-    # scaling_factors = [0.25, 0.5, 1, 2, 4]  # 2
-    # scaling_factors = [1]  # 0
-    # scaling_factors = [0.25, 0.5, 0.7, 0.9, 1, 1.1, 1.5, 2]  # 4
-    scales_list = [0.7 ** x for x in [4, 3, 2, 1, 0, -1]]
+    scales_list = [0.5 ** x for x in [1, 0, -1]]
 
     results = []
     to_pil_image = transforms.ToPILImage()
@@ -126,7 +122,7 @@ def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thre
             img.unsqueeze_(0)
 
             # now run the model
-            x = img.float().cuda()
+            x = img.float().to(device)
 
             output = model(x)
 
@@ -145,7 +141,8 @@ def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thre
             rf = dataloader.dataset.rf
             strx, offset = rf['stride'], rf['offset']
             cy, cx = fy * strx[0] + offset[0], fx * strx[1] + offset[1]
-            ch, cw = templates[fc, 3] - templates[fc, 1] + 1, templates[fc, 2] - templates[fc, 0] + 1
+            ch, cw = templates[fc, 3] - templates[fc, 1] + \
+                1, templates[fc, 2] - templates[fc, 0] + 1
 
             # bounding box refinements
             tx = score_reg[:, :, :, 0:num_templates]
@@ -212,15 +209,15 @@ def evaluate_multiscale(model, dataloader, templates, prob_thresh=0.65, nms_thre
     print("Results saved to `predictions.json`")
 
 
-def evaluate(model, dataloader, templates, prob_thresh, nms_thresh, num_templates=25, debug=False):
+def evaluate(model, dataloader, templates, prob_thresh, nms_thresh, num_templates=25, debug=False, device=None):
     print("Running evaluation code")
     model.eval()
-    model.cuda()
+    model.to(device)
 
     results = []
 
     for idx, (img, image_id, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):
-        x = img.float().cuda()
+        x = img.float().to(device)
         output = model(x)
 
         # first n_templates channels are class maps
