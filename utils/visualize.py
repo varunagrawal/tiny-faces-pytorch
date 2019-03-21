@@ -24,24 +24,3 @@ def draw_all_boxes(img, bboxes, categories):
         img = draw_bounding_box(img, bbox, c)
 
     img.show()
-
-
-def visualize_predictions(split="train", year="2014"):
-    predictions = open("../predictions.ndjson").readlines()
-    root = "/home/vagrawal/datasets/coco/{year}/{split}{year}".format(split=split, year=year)
-
-    for pred in predictions:
-        d = json.loads(pred)
-        image_path = Path(root, "COCO_train{year}_{id:012}.jpg".format(year=year, id=d["id"]))
-        img = Image.open(image_path)
-        bboxes = d["bboxes"]
-
-        for bbox in bboxes:
-            bbox = np.round(np.array(bbox))
-            img = draw_bounding_box(img, bbox, {"name": "car"})
-
-        img.show()
-
-
-if __name__ == "__main__":
-    visualize_predictions()

@@ -17,8 +17,7 @@ def arguments():
     parser.add_argument("traindata")
     parser.add_argument("valdata")
     parser.add_argument("--dataset-root", default="")
-    parser.add_argument("--dataset", default="COCO",
-                        choices=('COCO', 'WIDERFace'))
+    parser.add_argument("--dataset", default="WIDERFace")
     parser.add_argument("--lr", default=1e-4, type=float)
     parser.add_argument("--weight-decay", default=0.0005, type=float)
     parser.add_argument("--momentum", default=0.9, type=float)
