@@ -1,6 +1,7 @@
 import argparse
 import torch
 from torch import optim
+from torchvision import transforms
 from models.model import DetectionModel
 from models.loss import DetectionCriterion
 from datasets import get_dataloader
@@ -34,7 +35,13 @@ def main():
 
     num_templates = 25  # aka the number of clusters
 
-    train_loader = get_dataloader(args.traindata, args, num_templates)
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    img_transforms = transforms.Compose([
+        transforms.ToTensor(),
+        normalize
+    ])
+    train_loader = get_dataloader(args.traindata, args, num_templates, img_transforms=img_transforms)
 
     model = DetectionModel(num_objects=1, num_templates=num_templates)
     loss_fn = DetectionCriterion(num_templates)
