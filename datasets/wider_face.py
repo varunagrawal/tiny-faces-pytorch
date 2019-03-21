@@ -174,9 +174,7 @@ class WIDERFace(dataset.Dataset):
             print(index)
             print(image_path)
 
-        image = Image.open(self.dataset_root /
-                           "WIDER_{0}".format(self.split) / "images" /
-                           image_path).convert('RGB')
+        image = Image.open(image_path).convert('RGB')
 
         if self.split == 'train':
             img, class_map, reg_map = self.process_inputs(image, bboxes)
