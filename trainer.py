@@ -6,7 +6,6 @@ from pathlib import Path
 from tqdm import tqdm
 from utils.nms import nms
 import json
-import flops
 
 
 def print_state(idx, epoch, size, loss_cls, loss_reg):
@@ -19,7 +18,7 @@ def print_state(idx, epoch, size, loss_cls, loss_reg):
         loss_cls=loss_cls, loss_reg=loss_reg))
 
 
-def save_checkpoint(state, filename="checkpoint.pth.tar", save_path="weights"):
+def save_checkpoint(state, filename="checkpoint.pth", save_path="weights"):
     # check if the save directory exists
     if not Path(save_path).exists():
         Path(save_path).mkdir()
@@ -72,8 +71,8 @@ def train(model, loss_fn, optimizer, dataloader, epoch, save_path, device):
 
         # visualize_output(img, output, dataloader.dataset.templates)
 
-        loss, cls_loss, reg_loss = loss_fn(output,
-                                           class_map_var, regression_map_var)
+        loss = loss_fn(output,
+                       class_map_var, regression_map_var)
 
         # Get the gradients
         # torch will automatically mask the gradients to 0 where applicable!
