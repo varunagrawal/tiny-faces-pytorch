@@ -14,10 +14,12 @@ class WIDERFace(dataset.Dataset):
         super().__init__()
 
         self.data = []
+        self.split = split
+
         self.load(path)
 
         print("Dataset loaded")
-        print("{0} samples in the dataset".format(len(self.data)))
+        print("{0} samples in the {1} dataset".format(len(self.data), self.split))
         # self.data = data
 
         # canonical object templates obtained via clustering
@@ -39,8 +41,6 @@ class WIDERFace(dataset.Dataset):
             'offset': [-1, -1]
         }
 
-        self.split = split
-
         self.processor = DataProcessor(input_size, heatmap_size,
                                        pos_thresh, neg_thresh,
                                        templates, rf=self.rf)
@@ -48,46 +48,52 @@ class WIDERFace(dataset.Dataset):
 
     def load(self, path):
         """Load the dataset from the text file."""
-        lines = open(path).readlines()
-        self.data = []
-        idx = 0
 
-        while idx < len(lines):
-            img = lines[idx].strip()
-            idx += 1
-            n = int(lines[idx].strip())
-            idx += 1
+        if self.split in ("train", "val"):
+            lines = open(path).readlines()
+            self.data = []
+            idx = 0
 
-            bboxes = np.empty((n, 10))
-
-            for b in range(n):
-                bboxes[b, :] = [abs(float(x))
-                                for x in lines[idx].strip().split()]
+            while idx < len(lines):
+                img = lines[idx].strip()
+                idx += 1
+                n = int(lines[idx].strip())
                 idx += 1
 
-            # remove invalid bboxes where w or h are 0
-            invalid = np.where(np.logical_or(bboxes[:, 2] == 0, bboxes[:, 3] == 0))
-            bboxes = np.delete(bboxes, invalid, 0)
+                bboxes = np.empty((n, 10))
 
-            # convert to (x1, y1, x2, y2)
-            # We work with the two point representation since cropping becomes easier to deal with
-            bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2] - 1
-            bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3] - 1
+                for b in range(n):
+                    bboxes[b, :] = [abs(float(x))
+                                    for x in lines[idx].strip().split()]
+                    idx += 1
 
-            # bounding boxes are 1 indexed
-            bboxes[:, 0:4] = bboxes[:, 0:4] - 1
-            d = {
-                "img_path": img,
-                "bboxes": bboxes[:, 0:4],
-                "blur": bboxes[:, 4],
-                "expression": bboxes[:, 5],
-                "illumination": bboxes[:, 6],
-                "invalid": bboxes[:, 7],
-                "occlusion": bboxes[:, 8],
-                "pose": bboxes[:, 9]
-            }
+                # remove invalid bboxes where w or h are 0
+                invalid = np.where(np.logical_or(bboxes[:, 2] == 0, bboxes[:, 3] == 0))
+                bboxes = np.delete(bboxes, invalid, 0)
 
-            self.data.append(d)
+                # convert to (x1, y1, x2, y2)
+                # We work with the two point representation since cropping becomes easier to deal with
+                bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2] - 1
+                bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3] - 1
+
+                # bounding boxes are 1 indexed
+                bboxes[:, 0:4] = bboxes[:, 0:4] - 1
+                d = {
+                    "img_path": img,
+                    "bboxes": bboxes[:, 0:4],
+                    "blur": bboxes[:, 4],
+                    "expression": bboxes[:, 5],
+                    "illumination": bboxes[:, 6],
+                    "invalid": bboxes[:, 7],
+                    "occlusion": bboxes[:, 8],
+                    "pose": bboxes[:, 9]
+                }
+
+                self.data.append(d)
+
+        elif self.split == "test":
+            data = open(path).readlines()
+            self.data = [{'img_path': x.strip()} for x in data]
 
     def get_all_bboxes(self):
         bboxes = np.empty((0, 4))
@@ -164,19 +170,18 @@ class WIDERFace(dataset.Dataset):
     def __getitem__(self, index):
         d = self.data[index]
 
-        bboxes = d['bboxes']
         image_path = self.dataset_root / "WIDER_{0}".format(self.split) / "images" / d['img_path']
-
-        if self.debug:
-            if bboxes.shape[0] == 0:
-                print(image_path)
-
-            print(index)
-            print(image_path)
-
         image = Image.open(image_path).convert('RGB')
 
         if self.split == 'train':
+            bboxes = d['bboxes']
+
+            if self.debug:
+                if bboxes.shape[0] == 0:
+                    print(image_path)
+                print(index)
+                print(image_path)
+
             img, class_map, reg_map = self.process_inputs(image, bboxes)
 
             # convert everything to tensors
@@ -185,34 +190,23 @@ class WIDERFace(dataset.Dataset):
                 # this converts from (HxWxC) to (CxHxW) as well
                 img = self.transforms(img)
 
-            class_map, reg_map = torch.from_numpy(
-                class_map), torch.from_numpy(reg_map)
+            class_map, reg_map = torch.from_numpy(class_map), torch.from_numpy(reg_map)
 
             return img, class_map, reg_map
 
         elif self.split == 'val':
-            """
-            Multi scale stuff
+            # TODO need to figure out if bboxes are enough or do we need the maps?
+            if self.transforms is not None:
+                img = self.transforms(image)
 
-            # scale the images
-            scaling_factors = [-2, -1, 0, 1]
-            min_side = np.min(img.size)
-            test_sizes = [min_side * (2**x) for x in scaling_factors]
-            scales = [transforms.Resize(np.int(x)) for x in test_sizes]
-            imgs = [scales[idx](img) for idx in range(len(scales))]
-            scale_factors = [min_side / x for x in test_sizes]
-            # normalize the images
-            imgs = [self.transforms(i) for i in imgs]
+            bboxes = d['bboxes']
 
-            return imgs, scale_factors, image_id, labels
-            """
+            return img, bboxes
 
-            scaling_factors = [0]
+        elif self.split == 'test':
+            filename = d['img_path']
 
-            min_size = np.min(image.size)
-            resizer = transforms.Resize(np.int(min_size))
-            img_resized = resizer(image)
-            # normalize the image
-            img = self.transforms(img_resized)
+            if self.transforms is not None:
+                img = self.transforms(image)
 
-            return img, image_id, labels
+            return img, filename
