@@ -195,13 +195,14 @@ class WIDERFace(dataset.Dataset):
             return img, class_map, reg_map
 
         elif self.split == 'val':
-            # TODO need to figure out if bboxes are enough or do we need the maps?
+            # NOTE Return only the image and the image path. 
+            # Use the eval_tools to get the final results.
             if self.transforms is not None:
                 img = self.transforms(image)
 
-            bboxes = d['bboxes']
+            # bboxes = d['bboxes']
 
-            return img, bboxes
+            return img, d['img_path']
 
         elif self.split == 'test':
             filename = d['img_path']
