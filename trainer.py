@@ -93,59 +93,66 @@ def train(model, loss_fn, optimizer, dataloader, epoch, save_path, device):
     }, filename="checkpoint_{0}.pth".format(epoch+1), save_path=save_path)
 
 
-def evaluate(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, device=None):
-    #TODO check Peiyun's code to see the correct way to perform NMS
-    print("Running multiscale evaluation code")
+def eval(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, device=None):
+    print("Running multiscale evaluation code on val set")
 
-    model = model.eval().to(device)
-
-    # Evaluate over multiple scale
-    scales_list = [0.5 ** x for x in [1, 0, -1]]
-    num_templates = templates.shape[0]
-
+    dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
     results = []
-    to_pil_image = transforms.ToPILImage()
 
     for idx, (img, filename) in tqdm(enumerate(dataloader), total=len(dataloader)):
-        dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
+        img_dets = get_detections(model, img)
 
-        # convert tensor to PIL image so we can perform resizing
-        image = to_pil_image(img[0])
+    return dets
 
-        min_side = np.min(image.size)
 
-        for s, scale in enumerate(scales_list):
-            # scale the images
-            scaled_image = transforms.Resize(np.int(min_side*scale))(image)
+def get_detections(model, img, templates, rf, img_transforms, prob_thresh=0.65, nms_thresh=0.3, device=None):
+    model = model.eval().to(device)
 
-            # normalize the images
-            img = dataloader.dataset.transforms(scaled_image)
+    dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
 
-            # add batch dimension
-            img.unsqueeze_(0)
+    num_templates = templates.shape[0]
 
-            # now run the model
-            x = img.float().to(device)
+    # Evaluate over multiple scale
+    scales_list = [2 ** x for x in [-1, 0, 1]]
 
-            output = model(x)
+    # convert tensor to PIL image so we can perform resizing
+    image = transforms.functional.to_pil_image(img[0])
 
-            # first `num_templates` channels are class maps
-            score_cls = torch.sigmoid(output[:, :num_templates, :, :])
-            score_cls = score_cls.data.cpu().numpy().transpose((0, 2, 3, 1))
+    min_side = np.min(image.size)
 
-            score_reg = output[:, num_templates:, :, :]
-            score_reg = score_reg.data.cpu().numpy().transpose((0, 2, 3, 1))
+    for s, scale in enumerate(scales_list):
+        # scale the images
+        scaled_image = transforms.functional.resize(
+            image, np.int(min_side*scale))
 
-            t_bboxes, scores = get_bboxes(score_cls, score_reg, templates, prob_thresh, dataloader.dataset.rf, scale)
+        # normalize the images
+        img = img_transforms(scaled_image)
 
-            scales = np.ones((t_bboxes.shape[0], 1)) / scale
-            # append scores at the end for NMS
-            d = np.hstack((t_bboxes, scores, scales))
+        # add batch dimension
+        img.unsqueeze_(0)
 
-            dets = np.vstack((dets, d))
+        # now run the model
+        x = img.float().to(device)
 
-        # Apply NMS
-        keep = nms(dets, nms_thresh)
-        dets = dets[keep]
+        output = model(x)
+
+        # first `num_templates` channels are class maps
+        score_cls = torch.sigmoid(output[:, :num_templates, :, :])
+        score_cls = score_cls.data.cpu().numpy().transpose((0, 2, 3, 1))
+
+        score_reg = output[:, num_templates:, :, :]
+        score_reg = score_reg.data.cpu().numpy().transpose((0, 2, 3, 1))
+
+        t_bboxes, scores = get_bboxes(score_cls, score_reg, templates, prob_thresh, rf, scale)
+
+        scales = np.ones((t_bboxes.shape[0], 1)) / scale
+        # append scores at the end for NMS
+        d = np.hstack((t_bboxes, scores, scales))
+
+        dets = np.vstack((dets, d))
+
+    # Apply NMS
+    keep = nms(dets, nms_thresh)
+    dets = dets[keep]
 
     return dets
