@@ -12,8 +12,8 @@ def get_bboxes(score_cls, score_reg, templates, prob_thresh, rf, scale):
     scores = score_cls[fb, fy, fx, fc]
     scores = scores.reshape((scores.shape[0], 1))
 
-    strx, offset = rf['stride'], rf['offset']
-    cy, cx = fy * strx[0] + offset[0], fx * strx[1] + offset[1]
+    stride, offset = rf['stride'], rf['offset']
+    cy, cx = fy * stride[0] + offset[0], fx * stride[1] + offset[1]
     ch, cw = templates[fc, 3] - templates[fc, 1] + \
         1, templates[fc, 2] - templates[fc, 0] + 1
 

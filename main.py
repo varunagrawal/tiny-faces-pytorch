@@ -41,7 +41,8 @@ def main():
         transforms.ToTensor(),
         normalize
     ])
-    train_loader, _ = get_dataloader(args.traindata, args, num_templates, img_transforms=img_transforms)
+    train_loader, _ = get_dataloader(args.traindata, args, num_templates,
+                                     img_transforms=img_transforms)
 
     model = DetectionModel(num_objects=1, num_templates=num_templates)
     loss_fn = DetectionCriterion(num_templates)
