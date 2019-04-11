@@ -51,7 +51,9 @@ def get_model(checkpoint=None, num_templates=25):
     return model
 
 
-def write_results(dets, img_path, results_dir="results"):
+def write_results(dets, img_path, split):
+    results_dir = "{0}_results".format(split)
+
     if not osp.exists(results_dir):
         os.makedirs(results_dir)
 
@@ -72,13 +74,13 @@ def write_results(dets, img_path, results_dir="results"):
             f.write(d)
 
 
-def run(model, val_loader, templates, prob_thresh, nms_thresh, device):
+def run(model, val_loader, templates, prob_thresh, nms_thresh, device, split):
     for idx, (img, filename) in tqdm(enumerate(val_loader), total=len(val_loader)):
         dets = trainer.get_detections(model, img, templates, val_loader.dataset.rf,
                                       val_loader.dataset.transforms, prob_thresh,
                                       nms_thresh, device)
 
-        write_results(dets, filename[0])
+        write_results(dets, filename[0], split)
     return dets
 
 
@@ -97,7 +99,7 @@ def main():
 
     with torch.no_grad():
         # run model on val/test set and generate results files
-        run(model, val_loader, templates, args.prob_thresh, args.nms_thresh, device)
+        run(model, val_loader, templates, args.prob_thresh, args.nms_thresh, device, args.split)
 
 
 if __name__ == "__main__":
