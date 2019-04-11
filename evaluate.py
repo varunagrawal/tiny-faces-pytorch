@@ -11,11 +11,13 @@ import argparse
 from datasets import get_dataloader
 from datasets.wider_face import WIDERFace
 from models.model import DetectionModel
+from tqdm import tqdm
 
 
 def arguments():
     parser = argparse.ArgumentParser("Model Evaluator")
-    parser.add_argument("testdata")
+    parser.add_argument("dataset")
+    parser.add_argument("--split", default="val")
     parser.add_argument("--dataset-root")
     parser.add_argument("--checkpoint",
                         help="The path to the model checkpoint", default="")
@@ -35,8 +37,9 @@ def dataloader(args):
         normalize
     ])
 
-    val_loader, templates = get_dataloader(args.testdata, args,
-                                           train=False, split="test", img_transforms=val_transforms)
+    val_loader, templates = get_dataloader(args.dataset, args,
+                                           train=False, split=args.split,
+                                           img_transforms=val_transforms)
     return val_loader, templates
 
 
@@ -48,16 +51,39 @@ def get_model(checkpoint=None, num_templates=25):
     return model
 
 
+def write_results(dets, img_path, results_dir="results"):
+    if not osp.exists(results_dir):
+        os.makedirs(results_dir)
+
+    filename = osp.join(results_dir, img_path.replace('jpg', 'txt'))
+    file_dir = os.path.dirname(filename)
+    if not osp.exists(file_dir):
+        os.makedirs(file_dir)
+
+    with open(filename, 'w') as f:
+        f.write(img_path.split('/')[-1] + "\n")
+        f.write(str(dets.shape[0]) + "\n")
+
+        for x in dets:
+            left, top = np.round(x[0]), np.round(x[1])
+            width, height, score = np.round(x[2]-x[0]+1), np.round(x[3]-x[1]+1), x[4]
+            d = "{0} {1} {2} {3} {4}\n".format(int(left), int(top),
+                                               int(width), int(height), score)
+            f.write(d)
+
+
 def run(model, val_loader, templates, prob_thresh, nms_thresh, device):
-    dets = trainer.evaluate(model, val_loader, templates,
-                            prob_thresh, nms_thresh, device)
+    for idx, (img, filename) in tqdm(enumerate(val_loader), total=len(val_loader)):
+        dets = trainer.get_detections(model, img, templates, val_loader.dataset.rf,
+                                      val_loader.dataset.transforms, prob_thresh,
+                                      nms_thresh, device)
+
+        write_results(dets, filename[0])
     return dets
 
 
 def main():
     args = arguments()
-
-    predictions_file = "predictions.json"
 
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
@@ -69,10 +95,10 @@ def main():
 
     model = get_model(args.checkpoint, num_templates=num_templates)
 
-    detections = run(model, val_loader, templates, args.prob_thresh,
-                     args.nms_thresh, device)
+    with torch.no_grad():
+        # run model on val/test set and generate results files
+        run(model, val_loader, templates, args.prob_thresh, args.nms_thresh, device)
 
-    #TODO save results as per WIDERFace format
 
 if __name__ == "__main__":
     main()
