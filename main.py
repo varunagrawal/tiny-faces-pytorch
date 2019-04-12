@@ -25,6 +25,7 @@ def arguments():
     parser.add_argument("--workers", default=8, type=int)
     parser.add_argument("--start-epoch", default=0, type=int)
     parser.add_argument("--epochs", default=50, type=int)
+    parser.add_argument("--save-every", default=10, type=int)
     parser.add_argument("--resume", default="")
 
     return parser.parse_args()
@@ -77,8 +78,15 @@ def main():
     # train and evalute for `epochs`
     for epoch in range(args.start_epoch, args.epochs):
         scheduler.step()
-        trainer.train(model, loss_fn, optimizer, train_loader, epoch,
-                      save_path=weights_dir, device=device)
+        model = trainer.train(model, loss_fn, optimizer, train_loader, epoch, device=device)
+
+        if (epoch+1) % args.save_every == 0:
+            trainer.save_checkpoint({
+                'epoch': epoch + 1,
+                'batch_size': train_loader.batch_size,
+                'model': model.state_dict(),
+                'optimizer': optimizer.state_dict()
+            }, filename="checkpoint_{0}.pth".format(epoch+1), save_path=weights_dir)
 
 
 if __name__ == '__main__':

@@ -56,7 +56,7 @@ def draw_bboxes(image, img_id, bboxes, scores, scales, processor):
     processor.render_and_save_bboxes(image, img_id, bboxes, scores, scales)
 
 
-def train(model, loss_fn, optimizer, dataloader, epoch, save_path, device):
+def train(model, loss_fn, optimizer, dataloader, epoch, device):
     model = model.train()
     model = model.to(device)
 
@@ -85,13 +85,7 @@ def train(model, loss_fn, optimizer, dataloader, epoch, save_path, device):
                     loss_fn.cls_average.average,
                     loss_fn.reg_average.average)
 
-    save_checkpoint({
-        'epoch': epoch + 1,
-        'batch_size': dataloader.batch_size,
-        'model': model.state_dict(),
-        'optimizer': optimizer.state_dict()
-    }, filename="checkpoint_{0}.pth".format(epoch+1), save_path=save_path)
-
+    return model
 
 def eval(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, device=None):
     print("Running multiscale evaluation code on val set")
