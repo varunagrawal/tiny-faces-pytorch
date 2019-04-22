@@ -95,8 +95,9 @@ class DataProcessor:
         """
         # randomly pick a cropping window for the image
         # We add a +1 since randint is [low, high)
-        crop_x1 = np.random.randint(0, np.max([0, (img.shape[1] - self.input_size[1] + 1)]))
-        crop_y1 = np.random.randint(0, np.max([0, (img.shape[0] - self.input_size[0] + 1)]))
+        #TODO
+        crop_x1 = 0 #np.random.randint(0, np.max([0, (img.shape[1] - self.input_size[1] + 1)]))
+        crop_y1 = 0# np.random.randint(0, np.max([0, (img.shape[0] - self.input_size[0] + 1)]))
         crop_x2 = min(img.shape[1], crop_x1 + self.input_size[1])
         crop_y2 = min(img.shape[0], crop_y1 + self.input_size[0])
         crop_h = crop_y2 - crop_y1
@@ -104,8 +105,9 @@ class DataProcessor:
 
         # place the cropped image in a random location in a `input_size` image
         paste_box = [0, 0, 0, 0]  # x1, y1, x2, y2
-        paste_box[0] = np.random.randint(0, self.input_size[1] - crop_w + 1)
-        paste_box[1] = np.random.randint(0, self.input_size[0] - crop_h + 1)
+        #TODO
+        paste_box[0] = 0 #np.random.randint(0, self.input_size[1] - crop_w + 1)
+        paste_box[1] = 0 #np.random.randint(0, self.input_size[0] - crop_h + 1)
         paste_box[2] = paste_box[0] + crop_w
         paste_box[3] = paste_box[1] + crop_h
 
@@ -209,9 +211,11 @@ class DataProcessor:
         fxx2 = bboxes[:, 2].reshape(1, 1, 1, bboxes.shape[0])
         fyy2 = bboxes[:, 3].reshape(1, 1, 1, bboxes.shape[0])
 
-        h = dy2 - dy1 + 1
+        #TODO
+        h = dy2 - dy1
         dhh = h.reshape(1, 1, h.shape[0], 1)  # (1, 1, N, 1)
-        w = dx2 - dx1 + 1
+        #TODO
+        w = dx2 - dx1
         dww = w.reshape(1, 1, w.shape[0], 1)  # (1, 1, N, 1)
 
         fcx = (fxx1 + fxx2) / 2
@@ -220,15 +224,17 @@ class DataProcessor:
         tx = np.divide((fcx - coarse_xx.reshape(vsy, vsx, 1, 1)), dww)
         ty = np.divide((fcy - coarse_yy.reshape(vsy, vsx, 1, 1)), dhh)
 
-        fhh = fyy2 - fyy1 + 1
-        fww = fxx2 - fxx1 + 1
+        #TODO
+        fhh = fyy2 - fyy1
+        fww = fxx2 - fxx1
 
         tw = np.log(np.divide(fww, dww))  # (1, 1, N, bboxes)
         th = np.log(np.divide(fhh, dhh))
 
         # Randomly perturb the IOU so that if multiple candidates have the same IOU,
         # we don't pick the same one every time. This is useful when the template is smaller than the GT bbox
-        iou = iou + (1e-6 * np.random.rand(*iou.shape))
+        #TODO
+        # iou = iou + (1e-6 * np.random.rand(*iou.shape))
 
         best_obj_per_loc = iou.argmax(axis=3)
         idx0, idx1, idx2 = np.indices(iou.shape[:-1])
@@ -258,6 +264,7 @@ class DataProcessor:
 
         # h, w, c = img.shape
         # TODO figure out what this is supposed to do L309 in cnn_get_batch_hardmine.m
+        # This does flipping and scaling #TODO need to add this
         # dx, dy = np.floor((w - self.input_size[1]) * )
 
         # each cluster is [-w/2, -h/2, w/2, h/2]
@@ -269,8 +276,8 @@ class DataProcessor:
         ind = np.where(invalid)
         bboxes = np.delete(bboxes, ind, axis=0)
 
-        # TODO
-        bboxes[:, 0:2] += 1
+        # # TODO
+        # bboxes[:, 0:2] += 1
 
         ng = bboxes.shape[0]
         iou = np.zeros((vsy, vsx, self.templates.shape[0], bboxes.shape[0]))
@@ -356,8 +363,9 @@ class DataProcessor:
         # fy, fx, fc = np.where(best_iou >= 0.5)  # neg thresh
 
         cy, cx = fy*self.sty + self.ofy, fx*self.stx + self.ofx
-        cw = templates[fc, 2] - templates[fc, 0] + 1
-        ch = templates[fc, 3] - templates[fc, 1] + 1
+        #TODO
+        cw = templates[fc, 2] - templates[fc, 0]
+        ch = templates[fc, 3] - templates[fc, 1]
 
         # box_ovlp = best_iou[fc, fy, fx]
         num_templates = templates.shape[0]

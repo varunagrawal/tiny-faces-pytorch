@@ -14,6 +14,7 @@ import os.path as osp
 def arguments():
     parser = argparse.ArgumentParser()
 
+    #TODO
     parser.add_argument("traindata")
     parser.add_argument("valdata")
     parser.add_argument("--dataset-root", default="")
@@ -21,8 +22,8 @@ def arguments():
     parser.add_argument("--lr", default=1e-4, type=float)
     parser.add_argument("--weight-decay", default=0.0005, type=float)
     parser.add_argument("--momentum", default=0.9, type=float)
-    parser.add_argument("--batch-size", default=12, type=int)
-    parser.add_argument("--workers", default=8, type=int)
+    parser.add_argument("--batch-size", default=1, type=int)
+    parser.add_argument("--workers", default=0, type=int)
     parser.add_argument("--start-epoch", default=0, type=int)
     parser.add_argument("--epochs", default=50, type=int)
     parser.add_argument("--save-every", default=10, type=int)
