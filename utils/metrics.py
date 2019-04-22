@@ -13,15 +13,15 @@ def jaccard_index(box_a, box_b, indices=[]):
     :return:
     """
     # area of bounding boxes
-    area_A = (box_a[2] - box_a[0] + 1) * (box_a[3] - box_a[1] + 1)
-    area_B = (box_b[2] - box_b[0] + 1) * (box_b[3] - box_b[1] + 1)
+    area_A = (box_a[2] - box_a[0]) * (box_a[3] - box_a[1])
+    area_B = (box_b[2] - box_b[0]) * (box_b[3] - box_b[1])
 
     xA = max(box_a[0], box_b[0])
     yA = max(box_a[1], box_b[1])
     xB = min(box_a[2], box_b[2])
     yB = min(box_a[3], box_b[3])
 
-    intersection = (xB - xA + 1) * (yB - yA + 1)
+    intersection = (xB - xA) * (yB - yA)
     union = area_A + area_B - intersection
 
     # return the intersection over union value
@@ -46,15 +46,15 @@ def rect_dist(I, J):
         J = J[np.newaxis, :]
 
     # area of boxes
-    aI = (I[:, 2] - I[:, 0] + 1) * (I[:, 3] - I[:, 1] + 1)
-    aJ = (J[:, 2] - J[:, 0] + 1) * (J[:, 3] - J[:, 1] + 1)
+    aI = (I[:, 2] - I[:, 0]) * (I[:, 3] - I[:, 1])
+    aJ = (J[:, 2] - J[:, 0]) * (J[:, 3] - J[:, 1])
 
     x1 = np.maximum(I[:, 0], J[:, 0])
     y1 = np.maximum(I[:, 1], J[:, 1])
     x2 = np.minimum(I[:, 2], J[:, 2])
     y2 = np.minimum(I[:, 3], J[:, 3])
 
-    aIJ = (x2-x1+1) * (y2-y1+1) * (np.logical_and(x2 > x1, y2 > y1))
+    aIJ = (x2-x1) * (y2-y1) * (np.logical_and(x2 > x1, y2 > y1))
 
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
@@ -129,13 +129,13 @@ def average_precision(confidence, dets, image_ids, class_recs, npos, ovthresh=0.
             iymin = np.maximum(BBGT[:, 1], bb[1])
             ixmax = np.minimum(BBGT[:, 2], bb[2])
             iymax = np.minimum(BBGT[:, 3], bb[3])
-            iw = np.maximum(ixmax - ixmin + 1., 0.)
-            ih = np.maximum(iymax - iymin + 1., 0.)
+            iw = np.maximum(ixmax - ixmin., 0.)
+            ih = np.maximum(iymax - iymin., 0.)
             inters = iw * ih
 
             # union
-            uni = ((bb[2] - bb[0] + 1) * (bb[3] - bb[1] + 1) +
-                   (BBGT[:, 2] - BBGT[:, 0] + 1) * (BBGT[:, 3] - BBGT[:, 1] + 1) -
+            uni = ((bb[2] - bb[0]) * (bb[3] - bb[1]) +
+                   (BBGT[:, 2] - BBGT[:, 0]) * (BBGT[:, 3] - BBGT[:, 1]) -
                    inters)
 
             overlaps = inters / uni

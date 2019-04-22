@@ -94,9 +94,9 @@ class DataProcessor:
         bboxes is the np.array of all bounding boxes [x1, y1, x2, y2]
         """
         # randomly pick a cropping window for the image
-        # We add a +1 since randint is [low, high)
-        crop_x1 = np.random.randint(0, np.max([0, (img.shape[1] - self.input_size[1] + 1)]))
-        crop_y1 = np.random.randint(0, np.max([0, (img.shape[0] - self.input_size[0] + 1)]))
+        # We keep the second arg to randint at least 1 since randint is [low, high)
+        crop_x1 = np.random.randint(0, np.max([1, (img.shape[1] - self.input_size[1] + 1)]))
+        crop_y1 = np.random.randint(0, np.max([1, (img.shape[0] - self.input_size[0] + 1)]))
         crop_x2 = min(img.shape[1], crop_x1 + self.input_size[1])
         crop_y2 = min(img.shape[0], crop_y1 + self.input_size[0])
         crop_h = crop_y2 - crop_y1

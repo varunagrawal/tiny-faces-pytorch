@@ -75,7 +75,6 @@ class WIDERFace(dataset.Dataset):
 
                 # convert to (x1, y1, x2, y2)
                 # We work with the two point representation since cropping becomes easier to deal with
-                #TODO
                 bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2]
                 bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3]
 
