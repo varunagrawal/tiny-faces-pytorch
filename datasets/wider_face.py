@@ -8,8 +8,8 @@ from torchvision import transforms
 
 
 class WIDERFace(dataset.Dataset):
-    def __init__(self, path,  templates, img_transforms=None, dataset_root="", split="train", train=True,
-                 input_size=(500, 500), heatmap_size=(63, 63),
+    def __init__(self, path,  templates, img_transforms=None, dataset_root="", split="train",
+                 train=True, input_size=(500, 500), heatmap_size=(63, 63),
                  pos_thresh=0.7, neg_thresh=0.3, pos_fraction=0.5, debug=False):
         super().__init__()
 
@@ -19,7 +19,8 @@ class WIDERFace(dataset.Dataset):
         self.load(path)
 
         print("Dataset loaded")
-        print("{0} samples in the {1} dataset".format(len(self.data), self.split))
+        print("{0} samples in the {1} dataset".format(len(self.data),
+                                                      self.split))
         # self.data = data
 
         # canonical object templates obtained via clustering
@@ -68,16 +69,19 @@ class WIDERFace(dataset.Dataset):
                     idx += 1
 
                 # remove invalid bboxes where w or h are 0
-                invalid = np.where(np.logical_or(bboxes[:, 2] == 0, bboxes[:, 3] == 0))
+                invalid = np.where(np.logical_or(bboxes[:, 2] == 0,
+                                                 bboxes[:, 3] == 0))
                 bboxes = np.delete(bboxes, invalid, 0)
 
                 # convert to (x1, y1, x2, y2)
                 # We work with the two point representation since cropping becomes easier to deal with
-                bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2] - 1
-                bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3] - 1
+                #TODO
+                bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2]
+                bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3]
 
                 # bounding boxes are 1 indexed
                 bboxes[:, 0:4] = bboxes[:, 0:4] - 1
+
                 d = {
                     "img_path": img,
                     "bboxes": bboxes[:, 0:4],
@@ -124,25 +128,23 @@ class WIDERFace(dataset.Dataset):
         # convert from PIL Image to ndarray
         img = np.array(image)
 
-        # Random Flip
-        if np.random.rand() > 0.5:
-            img = np.fliplr(img).copy()  # flip the image
-            lx1, lx2 = np.array(bboxes[:, 0]), np.array(bboxes[:, 2])
-            bboxes[:, 0] = self.input_size[1] - lx2 - 1
-            # Flip the bounding box. -1 for correct indexing
-            bboxes[:, 2] = self.input_size[1] - lx1 - 1
-
         # Get a random crop of the image and keep only relevant bboxes
         img, bboxes, paste_box = self.processor.crop_image(img, bboxes)
         pad_mask = self.processor.get_padding(paste_box)
 
+        # Random Flip
+        if np.random.rand() > 0.5:
+            img = np.fliplr(img).copy()  # flip the image
+            lx1, lx2 = np.array(bboxes[:, 0]), np.array(bboxes[:, 2])
+            # Flip the bounding box. -1 for correct indexing
+            bboxes[:, 0] = self.input_size[1] - lx2
+            bboxes[:, 2] = self.input_size[1] - lx1
+
         # Get the ground truth class and regression maps
-        class_maps, regress_maps, iou = self.processor.get_heatmaps(
-            bboxes, pad_mask)
+        class_maps, regress_maps, iou = self.processor.get_heatmaps(bboxes, pad_mask)
 
         # perform balance sampling so there are roughly the same number of positive and negative samples.
-        class_maps = self.processor.balance_sampling(
-            class_maps, self.pos_fraction)
+        class_maps = self.processor.balance_sampling(class_maps, self.pos_fraction)
 
         if self.debug:
             # Confirm is balance sampling works
@@ -170,7 +172,8 @@ class WIDERFace(dataset.Dataset):
     def __getitem__(self, index):
         d = self.data[index]
 
-        image_path = self.dataset_root / "WIDER_{0}".format(self.split) / "images" / d['img_path']
+        image_path = self.dataset_root / \
+            "WIDER_{0}".format(self.split) / "images" / d['img_path']
         image = Image.open(image_path).convert('RGB')
 
         if self.split == 'train':
@@ -195,7 +198,7 @@ class WIDERFace(dataset.Dataset):
             return img, class_map, reg_map
 
         elif self.split == 'val':
-            # NOTE Return only the image and the image path. 
+            # NOTE Return only the image and the image path.
             # Use the eval_tools to get the final results.
             if self.transforms is not None:
                 img = self.transforms(image)

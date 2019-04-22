@@ -1,13 +1,16 @@
 import numpy as np
 
+
 def compute_dense_overlap(ofx, ofy, stx, sty, vsx, vsy,
                           dx1, dy1, dx2, dy2,
                           gx1, gy1, gx2, gy2, zmx=1, zmy=1):
-    """"""
+    """
+    Compute the dense IoU
+    """
     num_templates = dx1.shape[0]
     num_gt = gx1.shape[0]
 
-    ty, tx = (vsy - 1) * zmy + 1, (vsx - 1) * zmx + 1
+    ty, tx = (vsy - 1) * zmy + 1, (vsx - 1) * zmx + 1  # + 1 is by definition of receptive field
     overlap = np.zeros((ty, tx, num_templates, num_gt))
 
     for i in range(num_gt):
