@@ -8,23 +8,20 @@ TESTDATA=$(ROOT)/wider_face_split/wider_face_test_filelist.txt
 
 CHECKPOINT=weights/checkpoint_50.pth
 
-main: cython
+main: 
         $(PYTHON) main.py $(TRAINDATA) $(VALDATA) --dataset-root $(ROOT)
 
-resume: cython
+resume: 
         $(PYTHON) main.py $(TRAINDATA) $(VALDATA) --dataset-root $(ROOT) --resume $(CHECKPOINT) --epochs $(EPOCH)
 
-evaluate: cython
+evaluate: 
         $(PYTHON) evaluate.py $(VALDATA) --dataset-root $(ROOT) --checkpoint $(CHECKPOINT) --split val
 
-test: cython
+test: 
         $(PYTHON) evaluate.py $(TESTDATA) --dataset-root $(ROOT) --checkpoint $(CHECKPOINT) --split test
 
-cluster: cython
+cluster: 
         cd utils; $(PYTHON) cluster.py $(TRAIN_INSTANCES)
 
-debug: cython
+debug: 
         $(PYTHON) main.py $(TRAINDATA) --dataset-root $(ROOT) --batch-size 1 --workers 0
-
-cython:
-        $(PYTHON) setup.py build_ext --inplace
