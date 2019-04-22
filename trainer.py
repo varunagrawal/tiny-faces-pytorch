@@ -69,11 +69,10 @@ def train(model, loss_fn, optimizer, dataloader, epoch, device):
         optimizer.zero_grad()
 
         output = model(x)
-
-        # visualize_output(img, output, dataloader.dataset.templates)
-
         loss = loss_fn(output,
                        class_map_var, regression_map_var)
+
+        # visualize_output(img, output, dataloader.dataset.templates)
 
         # Get the gradients
         # torch will automatically mask the gradients to 0 where applicable!

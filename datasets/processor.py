@@ -269,7 +269,7 @@ class DataProcessor:
         ind = np.where(invalid)
         bboxes = np.delete(bboxes, ind, axis=0)
 
-        # TODO
+        # Hack to ensure iou is correct
         bboxes[:, 0:2] += 1
 
         ng = bboxes.shape[0]
