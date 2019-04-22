@@ -177,8 +177,10 @@ class DataProcessor:
         coarse_xx2 = coarse_x[:, :, np.newaxis] + dx2[np.newaxis, np.newaxis, :]  # (vsy, vsx, nt)
         coarse_yy2 = coarse_y[:, :, np.newaxis] + dy2[np.newaxis, np.newaxis, :]  # (vsy, vsx, nt)
 
-        padx1 = coarse_xx1 < paste_box[0]
-        pady1 = coarse_yy1 < paste_box[1]
+        # Matlab code indexes from 1 hence to check against it, we need to add +1
+        # However, in python we don't need the +1 during actual training
+        padx1 = coarse_xx1 < paste_box[0]#+1
+        pady1 = coarse_yy1 < paste_box[1]#+1
         padx2 = coarse_xx2 > paste_box[2]
         pady2 = coarse_yy2 > paste_box[3]
 
@@ -210,8 +212,8 @@ class DataProcessor:
         fyy2 = bboxes[:, 3].reshape(1, 1, 1, bboxes.shape[0])
 
         h = dy2 - dy1 + 1
-        dhh = h.reshape(1, 1, h.shape[0], 1)  # (1, 1, N, 1)
         w = dx2 - dx1 + 1
+        dhh = h.reshape(1, 1, h.shape[0], 1)  # (1, 1, N, 1)
         dww = w.reshape(1, 1, w.shape[0], 1)  # (1, 1, N, 1)
 
         fcx = (fxx1 + fxx2) / 2
@@ -305,7 +307,7 @@ class DataProcessor:
         # handle the boundary
         non_neg_border = np.bitwise_and(pad_mask, class_maps != -1)
         class_maps[non_neg_border] = 0
-        regress_maps[np.repeat(non_neg_border, 4, 2)] = 0
+        regress_maps[:, :, :nt][non_neg_border] = 0
 
         # Return heatmaps
         return class_maps, regress_maps, iou
