@@ -57,8 +57,8 @@ def draw_bboxes(image, img_id, bboxes, scores, scales, processor):
 
 
 def train(model, loss_fn, optimizer, dataloader, epoch, device):
-    model = model.train()
     model = model.to(device)
+    model.train()
 
     for idx, (img, class_map, regression_map) in enumerate(dataloader):
         x = img.float().to(device)
@@ -66,40 +66,38 @@ def train(model, loss_fn, optimizer, dataloader, epoch, device):
         class_map_var = class_map.float().to(device)
         regression_map_var = regression_map.float().to(device)
 
-        optimizer.zero_grad()
-
         output = model(x)
         loss = loss_fn(output,
                        class_map_var, regression_map_var)
 
         # visualize_output(img, output, dataloader.dataset.templates)
 
+        optimizer.zero_grad()
         # Get the gradients
         # torch will automatically mask the gradients to 0 where applicable!
         loss.backward()
-
         optimizer.step()
 
         print_state(idx, epoch, len(dataloader),
                     loss_fn.cls_average.average,
                     loss_fn.reg_average.average)
 
-    return model
 
-def eval(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, device=None):
-    print("Running multiscale evaluation code on val set")
+# def eval(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, device=None):
+#     print("Running multiscale evaluation code on val set")
 
-    dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
-    results = []
+#     dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
+#     results = []
 
-    for idx, (img, filename) in tqdm(enumerate(dataloader), total=len(dataloader)):
-        img_dets = get_detections(model, img)
+#     for idx, (img, filename) in tqdm(enumerate(dataloader), total=len(dataloader)):
+#         img_dets = get_detections(model, img)
 
-    return dets
+#     return dets
 
 
 def get_detections(model, img, templates, rf, img_transforms, prob_thresh=0.65, nms_thresh=0.3, device=None):
-    model = model.eval().to(device)
+    model = model.to(device)
+    model.eval()
 
     dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
 
@@ -115,8 +113,8 @@ def get_detections(model, img, templates, rf, img_transforms, prob_thresh=0.65, 
 
     for s, scale in enumerate(scales_list):
         # scale the images
-        scaled_image = transforms.functional.resize(
-            image, np.int(min_side*scale))
+        scaled_image = transforms.functional.resize(image,
+                                                    np.int(min_side*scale))
 
         # normalize the images
         img = img_transforms(scaled_image)
@@ -136,7 +134,8 @@ def get_detections(model, img, templates, rf, img_transforms, prob_thresh=0.65, 
         score_reg = output[:, num_templates:, :, :]
         score_reg = score_reg.data.cpu().numpy().transpose((0, 2, 3, 1))
 
-        t_bboxes, scores = get_bboxes(score_cls, score_reg, templates, prob_thresh, rf, scale)
+        t_bboxes, scores = get_bboxes(score_cls, score_reg,
+                                      templates, prob_thresh, rf, scale)
 
         scales = np.ones((t_bboxes.shape[0], 1)) / scale
         # append scores at the end for NMS

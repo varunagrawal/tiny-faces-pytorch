@@ -78,7 +78,7 @@ def main():
     # train and evalute for `epochs`
     for epoch in range(args.start_epoch, args.epochs):
         # scheduler.step()
-        model = trainer.train(model, loss_fn, optimizer, train_loader, epoch, device=device)
+        trainer.train(model, loss_fn, optimizer, train_loader, epoch, device=device)
 
         if (epoch+1) % args.save_every == 0:
             trainer.save_checkpoint({
