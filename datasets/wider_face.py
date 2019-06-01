@@ -140,9 +140,11 @@ class WIDERFace(dataset.Dataset):
         if False:  #np.random.rand() > 0.5:
             img = np.fliplr(img).copy()  # flip the image
             lx1, lx2 = np.array(bboxes[:, 0]), np.array(bboxes[:, 2])
-            # Flip the bounding box. -1 for correct indexing
-            bboxes[:, 0] = self.input_size[1] - lx2
-            bboxes[:, 2] = self.input_size[1] - lx1
+            # Flip the bounding box. +1 for correct indexing
+            bboxes[:, 0] = self.input_size[1] - lx2 + 1
+            bboxes[:, 2] = self.input_size[1] - lx1 + 1
+
+            pad_mask = np.fliplr(pad_mask)
 
         # Get the ground truth class and regression maps
         class_maps, regress_maps, iou = self.processor.get_heatmaps(bboxes, pad_mask)
