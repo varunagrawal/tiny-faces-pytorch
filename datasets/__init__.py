@@ -29,6 +29,14 @@ def get_dataloader(datapath, args, num_templates=25,
 
     templates = np.round_(np.array(templates), decimals=8)
 
+    # We adjust the anchor templates for 0-indexing
+    ws = templates[:, 2] - templates[:, 0]
+    hs = templates[:, 3] - templates[:, 1]
+    templates[:, 0] = -ws/2
+    templates[:, 1] = -hs/2
+    templates[:, 2] = ws/2
+    templates[:, 3] = hs/2
+
     data_loader = data.DataLoader(WIDERFace(osp.expanduser(datapath), templates,
                                             train=train, split=split, img_transforms=img_transforms,
                                             dataset_root=osp.expanduser(args.dataset_root)),

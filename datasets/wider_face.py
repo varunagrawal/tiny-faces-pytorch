@@ -8,6 +8,9 @@ from torchvision import transforms
 
 
 class WIDERFace(dataset.Dataset):
+    """The WIDERFace dataset is generated using MATLAB,
+    so a lot of small housekeeping elements have been added
+    to take care of the indexing discrepancies."""
     def __init__(self, path,  templates, img_transforms=None, dataset_root="", split="train",
                  train=True, input_size=(500, 500), heatmap_size=(63, 63),
                  pos_thresh=0.7, neg_thresh=0.3, pos_fraction=0.5, debug=False):
@@ -35,7 +38,8 @@ class WIDERFace(dataset.Dataset):
         self.neg_thresh = neg_thresh
         self.pos_fraction = pos_fraction
 
-        # receptive field computed using a combination of values from Matconvnet plus derived equations.
+        # receptive field computed using a combination of values from Matconvnet
+        # plus derived equations.
         self.rf = {
             'size': [859, 859],
             'stride': [8, 8],
@@ -73,13 +77,16 @@ class WIDERFace(dataset.Dataset):
                                                  bboxes[:, 3] == 0))
                 bboxes = np.delete(bboxes, invalid, 0)
 
-                # convert to (x1, y1, x2, y2)
-                # We work with the two point representation since cropping becomes easier to deal with
-                bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2]
-                bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3]
+                # bounding boxes are 1 indexed so we keep them like that
+                # and treat them as abstract geometrical objects
+                # We only need to worry about the box indexing when actually rendering them
 
-                # bounding boxes are 1 indexed
-                bboxes[:, 0:4] = bboxes[:, 0:4] - 1
+                # convert from (x, y, w, h) to (x1, y1, x2, y2)
+                # We work with the two point representation
+                # since cropping becomes easier to deal with
+                # -1 to ensure the same representation as in Matlab.
+                bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2] - 1
+                bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3] - 1
 
                 d = {
                     "img_path": img,

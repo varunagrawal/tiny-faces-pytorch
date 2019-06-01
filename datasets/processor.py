@@ -179,8 +179,8 @@ class DataProcessor:
 
         # Matlab code indexes from 1 hence to check against it, we need to add +1
         # However, in python we don't need the +1 during actual training
-        padx1 = coarse_xx1 < paste_box[0]#+1
-        pady1 = coarse_yy1 < paste_box[1]#+1
+        padx1 = coarse_xx1 < paste_box[0]  # + 1
+        pady1 = coarse_yy1 < paste_box[1]  # + 1
         padx2 = coarse_xx2 > paste_box[2]
         pady2 = coarse_yy2 > paste_box[3]
 
@@ -259,7 +259,8 @@ class DataProcessor:
         regress_maps = np.zeros((vsy, vsx, nt * 4))
 
         # h, w, c = img.shape
-        # TODO figure out what this is supposed to do L309 in cnn_get_batch_hardmine.m
+        # L309 in cnn_get_batch_hardmine.m
+        # This does flipping and scaling #TODO need to add this
         # dx, dy = np.floor((w - self.input_size[1]) * )
 
         # each cluster is [-w/2, -h/2, w/2, h/2]
@@ -270,9 +271,6 @@ class DataProcessor:
         invalid = np.logical_or(bboxes[:, 2] <= bboxes[:, 0], bboxes[:, 3] <= bboxes[:, 1])
         ind = np.where(invalid)
         bboxes = np.delete(bboxes, ind, axis=0)
-
-        # Hack to ensure iou is correct
-        bboxes[:, 0:2] += 1
 
         ng = bboxes.shape[0]
         iou = np.zeros((vsy, vsx, self.templates.shape[0], bboxes.shape[0]))

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def get_bboxes(score_cls, score_reg, templates, prob_thresh, rf, scale):
+def get_bboxes(score_cls, score_reg, templates, prob_thresh, rf, scale=1):
     """
     Convert model output tensor to a set of bounding boxes and their corresponding scores
     """
@@ -14,7 +14,7 @@ def get_bboxes(score_cls, score_reg, templates, prob_thresh, rf, scale):
 
     stride, offset = rf['stride'], rf['offset']
     cy, cx = fy * stride[0] + offset[0], fx * stride[1] + offset[1]
-    ch, cw = templates[fc, 3] - templates[fc, 1], templates[fc, 2] - templates[fc, 0]
+    ch, cw = templates[fc, 3] - templates[fc, 1] + 1, templates[fc, 2] - templates[fc, 0] + 1
 
     # bounding box refinements
     tx = score_reg[:, :, :, 0:num_templates]

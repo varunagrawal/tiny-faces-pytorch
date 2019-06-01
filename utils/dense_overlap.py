@@ -25,12 +25,12 @@ def compute_dense_overlap(ofx, ofy, stx, sty, vsx, vsy,
 
             filter_area = filter_w * filter_h
 
-            xmax = (vsx - 1) * zmx
-            ymax = (vsy - 1) * zmy
+            xmax = tx
+            ymax = ty
 
             # enumerate spatial locations
-            for x in range(xmax+1):
-                for y in range(ymax+1):
+            for x in range(xmax):
+                for y in range(ymax):
                     cx = ofx + x*(stx/zmx)
                     cy = ofy + y*(sty/zmy)
 
