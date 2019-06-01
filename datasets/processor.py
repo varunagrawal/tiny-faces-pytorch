@@ -274,9 +274,6 @@ class DataProcessor:
         ind = np.where(invalid)
         bboxes = np.delete(bboxes, ind, axis=0)
 
-        # # TODO
-        # bboxes[:, 0:2] += 1
-
         ng = bboxes.shape[0]
         iou = np.zeros((vsy, vsx, self.templates.shape[0], bboxes.shape[0]))
 
@@ -292,7 +289,8 @@ class DataProcessor:
 
             best_iou = iou.max(axis=3)
 
-            # Set max IoU values to 1 (even if they are < pos_thresh, as long as they are above neg_thresh)
+            # Set max IoU values to 1
+            # (even if they are < pos_thresh, as long as they are above neg_thresh)
             per_object_iou = np.reshape(iou, (-1, ng))
             fbest_idx = np.argmax(per_object_iou, axis=0)
             iou_ = np.amax(per_object_iou, axis=0)
