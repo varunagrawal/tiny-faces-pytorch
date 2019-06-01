@@ -179,8 +179,9 @@ class DataProcessor:
         coarse_xx2 = coarse_x[:, :, np.newaxis] + dx2[np.newaxis, np.newaxis, :]  # (vsy, vsx, nt)
         coarse_yy2 = coarse_y[:, :, np.newaxis] + dy2[np.newaxis, np.newaxis, :]  # (vsy, vsx, nt)
 
-        padx1 = coarse_xx1 < paste_box[0]
-        pady1 = coarse_yy1 < paste_box[1]
+        # we add +1 to handle the 1-indexing from MATLAB
+        padx1 = coarse_xx1 < paste_box[0] + 1
+        pady1 = coarse_yy1 < paste_box[1] + 1
         padx2 = coarse_xx2 > paste_box[2]
         pady2 = coarse_yy2 > paste_box[3]
 
@@ -211,11 +212,9 @@ class DataProcessor:
         fxx2 = bboxes[:, 2].reshape(1, 1, 1, bboxes.shape[0])
         fyy2 = bboxes[:, 3].reshape(1, 1, 1, bboxes.shape[0])
 
-        #TODO
-        h = dy2 - dy1
+        h = dy2 - dy1 + 1
         dhh = h.reshape(1, 1, h.shape[0], 1)  # (1, 1, N, 1)
-        #TODO
-        w = dx2 - dx1
+        w = dx2 - dx1 + 1
         dww = w.reshape(1, 1, w.shape[0], 1)  # (1, 1, N, 1)
 
         fcx = (fxx1 + fxx2) / 2
@@ -224,9 +223,8 @@ class DataProcessor:
         tx = np.divide((fcx - coarse_xx.reshape(vsy, vsx, 1, 1)), dww)
         ty = np.divide((fcy - coarse_yy.reshape(vsy, vsx, 1, 1)), dhh)
 
-        #TODO
-        fhh = fyy2 - fyy1
-        fww = fxx2 - fxx1
+        fhh = fyy2 - fyy1 + 1
+        fww = fxx2 - fxx1 + 1
 
         tw = np.log(np.divide(fww, dww))  # (1, 1, N, bboxes)
         th = np.log(np.divide(fhh, dhh))
@@ -289,7 +287,9 @@ class DataProcessor:
                                         dx1, dy1, dx2, dy2,
                                         gx1, gy1, gx2, gy2,
                                         1, 1)
-
+            #TODO
+            print(iou[8, 0, 0, 1], " is equal to 0.0034901073931975918")  # 0.0034901073931975918
+            print(iou[8, 16, 0, 1], " is equal to 0.006106653207359936")  # 0.006106653207359936
             regress_maps, iou = self.get_regression(bboxes, [dx1, dy1, dx2, dy2], iou)
 
             best_iou = iou.max(axis=3)
@@ -312,7 +312,7 @@ class DataProcessor:
         # handle the boundary
         non_neg_border = np.bitwise_and(pad_mask, class_maps != -1)
         class_maps[non_neg_border] = 0
-        regress_maps[np.repeat(non_neg_border, 4, 2)] = 0
+        regress_maps[:, :, :nt][non_neg_border] = 0
 
         # Return heatmaps
         return class_maps, regress_maps, iou

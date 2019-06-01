@@ -28,9 +28,10 @@ def get_dataloader(datapath, args, num_templates=25,
         json.dump(templates, open(template_file, "w"))
 
     templates = np.round_(np.array(templates), decimals=8)
-    #TODO
+
     # We adjust the anchor templates for 0-indexing
-    ws, hs = templates[:, 2]*2 + 1, templates[:, 3]*2 + 1
+    ws = templates[:, 2] - templates[:, 0]
+    hs = templates[:, 3] - templates[:, 1]
     templates[:, 0] = -ws/2
     templates[:, 1] = -hs/2
     templates[:, 2] = ws/2

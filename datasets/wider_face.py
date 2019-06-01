@@ -73,15 +73,16 @@ class WIDERFace(dataset.Dataset):
                                                  bboxes[:, 3] == 0))
                 bboxes = np.delete(bboxes, invalid, 0)
 
-                #TODO
-                # bounding boxes are 1 indexed
-                bboxes[:, 0:2] = bboxes[:, 0:2] - 1
+                # bounding boxes are 1 indexed so we keep them like that
+                # and treat them as abstract geometrical objects
+                # We only need to worry about the box indexing when actually rendering them
 
                 # convert from (x, y, w, h) to (x1, y1, x2, y2)
-                # We work with the two point representation since cropping becomes easier to deal with
-                #TODO
-                bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2]
-                bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3]
+                # We work with the two point representation
+                # since cropping becomes easier to deal with
+                # -1 to ensure the same representation as in Matlab.
+                bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2] - 1
+                bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3] - 1
 
                 d = {
                     "img_path": img,
@@ -149,6 +150,7 @@ class WIDERFace(dataset.Dataset):
         #TODO
         from sklearn.externals import joblib
         joblib.dump([img, bboxes, paste_box, class_maps, regress_maps, iou], "tiny-faces-pytorch.jbl")
+        exit(0)
 
         # perform balance sampling so there are roughly the same number of positive and negative samples.
         class_maps = self.processor.balance_sampling(class_maps, self.pos_fraction)
