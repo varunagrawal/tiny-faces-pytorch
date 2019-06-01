@@ -56,4 +56,5 @@ def compute_dense_overlap(ofx, ofy, stx, sty, vsx, vsy,
                     else:
                         overlap[y, x, j, i] = 0
 
-    return overlap
+    # truncate the number of decimals to match MATLAB behavior
+    return np.around(overlap, decimals=14)
