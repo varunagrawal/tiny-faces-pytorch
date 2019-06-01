@@ -287,9 +287,7 @@ class DataProcessor:
                                         dx1, dy1, dx2, dy2,
                                         gx1, gy1, gx2, gy2,
                                         1, 1)
-            #TODO
-            print(iou[8, 0, 0, 1], " is equal to 0.0034901073931975918")  # 0.0034901073931975918
-            print(iou[8, 16, 0, 1], " is equal to 0.006106653207359936")  # 0.006106653207359936
+
             regress_maps, iou = self.get_regression(bboxes, [dx1, dy1, dx2, dy2], iou)
 
             best_iou = iou.max(axis=3)
