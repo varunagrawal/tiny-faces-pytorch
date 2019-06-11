@@ -15,6 +15,9 @@ class DetectionModel(nn.Module):
         output = (num_objects + 4)*num_templates
         self.model = base_model(pretrained=True)
 
+        # delete unneeded layer
+        del self.model.layer4
+
         self.score_res3 = nn.Conv2d(in_channels=512, out_channels=output,
                                     kernel_size=1, padding=0)
         self.score_res4 = nn.Conv2d(in_channels=1024, out_channels=output,
