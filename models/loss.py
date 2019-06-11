@@ -67,7 +67,7 @@ class DetectionCriterion(nn.Module):
         self.cls_average.update(self.masked_cls_loss.sum(), output.size(0))
         self.reg_average.update(self.masked_reg_loss.sum(), output.size(0))
 
-        return self.total_loss, self.masked_cls_loss, self.masked_reg_loss
+        return self.total_loss
 
     def reset(self):
         self.cls_average.reset()
