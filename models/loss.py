@@ -45,7 +45,7 @@ class DetectionCriterion(nn.Module):
         regression = output[:, self.n_templates:, :, :]
 
         # weights used to mask out invalid regions i.e. where the label is 0
-        self.cls_mask = (class_map != 0).float()
+        self.cls_mask = (class_map != 0).type(output.dtype)
 
         cls_loss = self.classification_criterion(classification, class_map)
 
@@ -57,7 +57,9 @@ class DetectionCriterion(nn.Module):
         # class_map = class_map * (cls_loss >= 0.03).float()
 
         reg_loss = self.regression_criterion(regression, regression_map)
-        self.reg_mask = (class_map > 0).repeat(1, 4, 1, 1).float()  # now this is the same size as reg_map
+        # make same size as reg_map
+        self.reg_mask = (class_map > 0).repeat(1, 4, 1, 1).type(output.dtype)
+
         self.masked_reg_loss = self.reg_mask * reg_loss  # / reg_loss.size(0)
 
         self.total_loss = self.masked_cls_loss.sum() + self.reg_weight*self.masked_reg_loss.sum()
@@ -65,7 +67,7 @@ class DetectionCriterion(nn.Module):
         self.cls_average.update(self.masked_cls_loss.sum(), output.size(0))
         self.reg_average.update(self.masked_reg_loss.sum(), output.size(0))
 
-        return self.total_loss
+        return self.total_loss, self.masked_cls_loss, self.masked_reg_loss
 
     def reset(self):
         self.cls_average.reset()
