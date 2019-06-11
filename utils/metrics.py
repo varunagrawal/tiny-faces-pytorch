@@ -129,8 +129,8 @@ def average_precision(confidence, dets, image_ids, class_recs, npos, ovthresh=0.
             iymin = np.maximum(BBGT[:, 1], bb[1])
             ixmax = np.minimum(BBGT[:, 2], bb[2])
             iymax = np.minimum(BBGT[:, 3], bb[3])
-            iw = np.maximum(ixmax - ixmin., 0.)
-            ih = np.maximum(iymax - iymin., 0.)
+            iw = np.maximum(ixmax - ixmin, 0.0)
+            ih = np.maximum(iymax - iymin, 0.0)
             inters = iw * ih
 
             # union
