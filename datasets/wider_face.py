@@ -11,7 +11,7 @@ class WIDERFace(dataset.Dataset):
     """The WIDERFace dataset is generated using MATLAB,
     so a lot of small housekeeping elements have been added
     to take care of the indexing discrepancies."""
-    def __init__(self, path,  templates, img_transforms=None, dataset_root="", split="train",
+    def __init__(self, path, templates, img_transforms=None, dataset_root="", split="train",
                  train=True, input_size=(500, 500), heatmap_size=(63, 63),
                  pos_thresh=0.7, neg_thresh=0.3, pos_fraction=0.5, debug=False):
         super().__init__()

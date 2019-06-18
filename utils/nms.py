@@ -11,7 +11,6 @@ def nms(dets, thresh):
     y2 = dets[:, 3]
     scores = dets[:, 4]
 
-    #TODO verify the indexing
     areas = (x2 - x1) * (y2 - y1)
     order = scores.argsort()[::-1]
 
