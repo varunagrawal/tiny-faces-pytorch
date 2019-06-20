@@ -258,11 +258,6 @@ class DataProcessor:
         class_maps = -np.ones((vsy, vsx, nt))
         regress_maps = np.zeros((vsy, vsx, nt * 4))
 
-        # h, w, c = img.shape
-        # L309 in cnn_get_batch_hardmine.m
-        # This does flipping and scaling #TODO need to add this
-        # dx, dy = np.floor((w - self.input_size[1]) * )
-
         # each cluster is [-w/2, -h/2, w/2, h/2]
         dx1, dx2 = self.templates[:, 0], self.templates[:, 2]
         dy1, dy2 = self.templates[:, 1], self.templates[:, 3]
