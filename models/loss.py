@@ -42,16 +42,18 @@ class DetectionCriterion(nn.Module):
         self.total_loss = None
 
     def hard_negative_mining(self, classification, class_map):
-        cls_loss = nn.functional.soft_margin_loss(classification, class_map, reduction='none')
-        class_map[cls_loss < 0.03] = 0
+        loss_class_map = nn.functional.soft_margin_loss(classification, class_map,
+                                                        reduction='none')
+        class_map[loss_class_map < 0.03] = 0
         return class_map
 
-    def forward(self, output, class_map, regression_map):
+    def forward(self, output, class_map, regression_map, ohem=True):
         classification = output[:, 0:self.n_templates, :, :]
         regression = output[:, self.n_templates:, :, :]
 
-        # hard negative mining
-        class_map = self.hard_negative_mining(classification, class_map)
+        # online hard negative mining
+        if ohem:
+            class_map = self.hard_negative_mining(classification, class_map)
 
         # weights used to mask out invalid regions i.e. where the label is 0
         self.cls_mask = (class_map != 0).type(output.dtype)
