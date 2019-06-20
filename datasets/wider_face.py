@@ -118,7 +118,7 @@ class WIDERFace(dataset.Dataset):
     def process_inputs(self, image, bboxes):
 
         # Randomly resize the image
-        rnd = 0.5 # np.random.rand()
+        rnd = np.random.rand()
         if rnd < 1 / 3:
             # resize by half
             scaled_shape = (int(0.5 * image.height), int(0.5 * image.width))
@@ -139,7 +139,7 @@ class WIDERFace(dataset.Dataset):
         pad_mask = self.processor.get_padding(paste_box)
 
         # Random Flip
-        flip = 1 > 0.5 # np.random.rand()
+        flip = np.random.rand() > 0.5
         if flip:
             img = np.fliplr(img).copy()  # flip the image
             lx1, lx2 = np.array(bboxes[:, 0]), np.array(bboxes[:, 2])
@@ -147,14 +147,10 @@ class WIDERFace(dataset.Dataset):
             bboxes[:, 0] = self.input_size[1] - lx2 + 1
             bboxes[:, 2] = self.input_size[1] - lx1 + 1
 
+            pad_mask = np.fliplr(pad_mask)
+
         # Get the ground truth class and regression maps
         class_maps, regress_maps, iou = self.processor.get_heatmaps(bboxes, pad_mask)
-
-        from sklearn.externals import joblib
-        print(bboxes)
-        joblib.dump([img, bboxes, paste_box, class_maps, regress_maps, iou], "tiny-faces-pytorch.jbl")
-        print("saved")
-        exit(0)
 
         # perform balance sampling so there are roughly the same number of positive and negative samples.
         class_maps = self.processor.balance_sampling(class_maps, self.pos_fraction)
