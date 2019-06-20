@@ -182,7 +182,7 @@ class WIDERFace(dataset.Dataset):
 
     def __getitem__(self, index):
         #TODO
-        index = 11063
+        index = 0
         d = self.data[index]
 
         image_path = self.dataset_root / \
