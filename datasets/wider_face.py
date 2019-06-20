@@ -179,7 +179,6 @@ class WIDERFace(dataset.Dataset):
         return img, class_maps, regress_maps
 
     def __getitem__(self, index):
-        index = 0
         d = self.data[index]
 
         image_path = self.dataset_root / \
