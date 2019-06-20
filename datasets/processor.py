@@ -19,7 +19,8 @@ class DataProcessor:
     The idea is that this can act as a mixin that enables torch dataloaders with the heatmap
     generation semantics.
     """
-    def __init__(self, input_size, heatmap_size, pos_thresh, neg_thresh, templates, img_means=None, rf=None):
+    def __init__(self, input_size, heatmap_size, pos_thresh, neg_thresh, templates,
+                 img_means=None, rf=None):
         self.input_size = input_size
         self.heatmap_size = heatmap_size
         self.pos_thresh = pos_thresh
@@ -28,66 +29,7 @@ class DataProcessor:
         self.rf = rf
         self.ofy, self.ofx = rf['offset']
         self.sty, self.stx = rf['stride']
-        self.sample_size = 256
         self.img_means = img_means or [0.485, 0.456, 0.406]
-
-    def balance_sampling(self, label_cls, pos_fraction):
-        """
-        Perform balance sampling by always sampling `pos_fraction` positive samples and
-        `(1-pos_fraction)` negative samples from the input
-        :param label_cls:
-        :param pos_fraction:
-        :return:
-        """
-        pos_maxnum = self.sample_size * pos_fraction  # sample 128 positive points
-        # find all the points where we have objects
-        # ravel the indices to get a 1D array. This makes the subsequent operations easier to reason about
-        pos_idx_unraveled = np.where(label_cls == 1)
-        pos_idx = np.ravel_multi_index(pos_idx_unraveled, label_cls.shape)
-
-        if pos_idx.size > pos_maxnum:
-            # Get all the indices of the locations to be zeroed out
-            didx = self.shuffle_index(pos_idx.size, pos_idx.size-pos_maxnum)
-            # Get the locations and unravel it so we can index
-            pos_idx_unraveled = np.unravel_index(pos_idx[didx], label_cls.shape)
-            label_cls[pos_idx_unraveled] = 0
-
-        neg_maxnum = pos_maxnum * (1 - pos_fraction) / pos_fraction
-        neg_idx_unraveled = np.where(label_cls == -1)
-        neg_idx = np.ravel_multi_index(neg_idx_unraveled, label_cls.shape)
-
-        if neg_idx.size > neg_maxnum:
-            # Get all the indices of the locations to be zeroed out
-            ridx = self.shuffle_index(neg_idx.size, neg_maxnum)
-            didx = np.arange(0, neg_idx.size)
-            didx = np.delete(didx, ridx)
-            neg_idx = np.unravel_index(neg_idx[didx], label_cls.shape)
-            label_cls[neg_idx] = 0
-
-        return label_cls
-
-    def shuffle_index(self, n, n_out):
-        """
-        Randomly shuffle the indices and return a subset of them
-        :param n: The number of indices to shuffle.
-        :param n_out: The number of output indices.
-        :return:
-        """
-        n = int(n)
-        n_out = int(n_out)
-
-        if n == 0 or n_out == 0:
-            return np.empty(0)
-
-        x = np.random.permutation(n)
-
-        # the output should be at most the size of the input
-        assert n_out <= n
-
-        if n_out != n:
-            x = x[:n_out]
-
-        return x
 
     def crop_image(self, img, bboxes):
         """

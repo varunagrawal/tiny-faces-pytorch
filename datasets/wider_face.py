@@ -156,9 +156,6 @@ class WIDERFace(dataset.Dataset):
         # Get the ground truth class and regression maps
         class_maps, regress_maps, iou = self.processor.get_heatmaps(bboxes, pad_mask)
 
-        # perform balance sampling so there are roughly the same number of positive and negative samples.
-        class_maps = self.processor.balance_sampling(class_maps, self.pos_fraction)
-
         if self.debug:
             # Confirm is balance sampling works
             print("Positives", class_maps[class_maps == 1].sum())
