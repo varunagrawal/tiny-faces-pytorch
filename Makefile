@@ -24,4 +24,4 @@ cluster:
         cd utils; $(PYTHON) cluster.py $(TRAIN_INSTANCES)
 
 debug: 
-        $(PYTHON) main.py $(TRAINDATA) --dataset-root $(ROOT) --batch-size 1 --workers 0
+        $(PYTHON) main.py $(TRAINDATA) $(VALDATA) --dataset-root $(ROOT) --batch-size 1 --workers 0
