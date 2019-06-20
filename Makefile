@@ -24,7 +24,7 @@ cluster: cython
         cd utils; $(PYTHON) cluster.py $(TRAIN_INSTANCES)
 
 debug: cython
-        $(PYTHON) main.py $(TRAINDATA) --dataset-root $(ROOT) --batch-size 1 --workers 0
+        $(PYTHON) main.py $(TRAINDATA) $(VALDATA) --dataset-root $(ROOT) --batch-size 1 --workers 0
 
 cython:
         $(PYTHON) setup.py build_ext --inplace
