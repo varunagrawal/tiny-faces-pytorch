@@ -95,8 +95,9 @@ class DataProcessor:
         """
         # randomly pick a cropping window for the image
         # We keep the second arg to randint at least 1 since randint is [low, high)
-        crop_x1 = np.random.randint(0, np.max([1, (img.shape[1] - self.input_size[1] + 1)]))
-        crop_y1 = np.random.randint(0, np.max([1, (img.shape[0] - self.input_size[0] + 1)]))
+        #TODO
+        crop_x1 = 0 #np.random.randint(0, np.max([1, (img.shape[1] - self.input_size[1] + 1)]))
+        crop_y1 = 0 #np.random.randint(0, np.max([1, (img.shape[0] - self.input_size[0] + 1)]))
         crop_x2 = min(img.shape[1], crop_x1 + self.input_size[1])
         crop_y2 = min(img.shape[0], crop_y1 + self.input_size[0])
         crop_h = crop_y2 - crop_y1
@@ -104,8 +105,8 @@ class DataProcessor:
 
         # place the cropped image in a random location in a `input_size` image
         paste_box = [0, 0, 0, 0]  # x1, y1, x2, y2
-        paste_box[0] = np.random.randint(0, self.input_size[1] - crop_w + 1)
-        paste_box[1] = np.random.randint(0, self.input_size[0] - crop_h + 1)
+        paste_box[0] = 0 #np.random.randint(0, self.input_size[1] - crop_w + 1)
+        paste_box[1] = 0 #np.random.randint(0, self.input_size[0] - crop_h + 1)
         paste_box[2] = paste_box[0] + crop_w
         paste_box[3] = paste_box[1] + crop_h
 
@@ -179,8 +180,8 @@ class DataProcessor:
 
         # Matlab code indexes from 1 hence to check against it, we need to add +1
         # However, in python we don't need the +1 during actual training
-        padx1 = coarse_xx1 < paste_box[0]  # + 1
-        pady1 = coarse_yy1 < paste_box[1]  # + 1
+        padx1 = coarse_xx1 < paste_box[0] + 1
+        pady1 = coarse_yy1 < paste_box[1] + 1
         padx2 = coarse_xx2 > paste_box[2]
         pady2 = coarse_yy2 > paste_box[3]
 
@@ -230,7 +231,8 @@ class DataProcessor:
 
         # Randomly perturb the IOU so that if multiple candidates have the same IOU,
         # we don't pick the same one every time. This is useful when the template is smaller than the GT bbox
-        iou = iou + (1e-6 * np.random.rand(*iou.shape))
+        #TODO
+        # iou = iou + (1e-6 * np.random.rand(*iou.shape))
 
         best_obj_per_loc = iou.argmax(axis=3)
         idx0, idx1, idx2 = np.indices(iou.shape[:-1])
@@ -356,8 +358,8 @@ class DataProcessor:
         # fy, fx, fc = np.where(best_iou >= 0.5)  # neg thresh
 
         cy, cx = fy*self.sty + self.ofy, fx*self.stx + self.ofx
-        cw = templates[fc, 2] - templates[fc, 0] + 1
-        ch = templates[fc, 3] - templates[fc, 1] + 1
+        cw = templates[fc, 2] - templates[fc, 0]
+        ch = templates[fc, 3] - templates[fc, 1]
 
         # box_ovlp = best_iou[fc, fy, fx]
         num_templates = templates.shape[0]
