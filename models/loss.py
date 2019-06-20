@@ -25,7 +25,8 @@ class DetectionCriterion(nn.Module):
     def __init__(self, n_templates=25, reg_weight=2):
         super().__init__()
 
-        # We don't want per element averaging. We want to normalize over the batch or positive samples.
+        # We don't want per element averaging.
+        # We want to normalize over the batch or positive samples.
         self.regression_criterion = nn.SmoothL1Loss(reduction='none')
         self.classification_criterion = nn.SoftMarginLoss(reduction='none')
         self.n_templates = n_templates
@@ -40,9 +41,17 @@ class DetectionCriterion(nn.Module):
         self.reg_mask = None
         self.total_loss = None
 
+    def hard_negative_mining(self, classification, class_map):
+        cls_loss = nn.functional.soft_margin_loss(classification, class_map, reduction='none')
+        class_map[cls_loss < 0.03] = 0
+        return class_map
+
     def forward(self, output, class_map, regression_map):
         classification = output[:, 0:self.n_templates, :, :]
         regression = output[:, self.n_templates:, :, :]
+
+        # hard negative mining
+        class_map = self.hard_negative_mining(classification, class_map)
 
         # weights used to mask out invalid regions i.e. where the label is 0
         self.cls_mask = (class_map != 0).type(output.dtype)
@@ -51,10 +60,6 @@ class DetectionCriterion(nn.Module):
 
         # Mask the classification loss
         self.masked_cls_loss = self.cls_mask * cls_loss
-
-        # hard negative mining
-        # class_map[cls_loss < 0.03] = 0
-        # class_map = class_map * (cls_loss >= 0.03).float()
 
         reg_loss = self.regression_criterion(regression, regression_map)
         # make same size as reg_map
