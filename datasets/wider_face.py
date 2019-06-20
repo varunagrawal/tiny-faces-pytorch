@@ -137,7 +137,8 @@ class WIDERFace(dataset.Dataset):
 
         # Random Flip
         #TODO
-        if False:  #np.random.rand() > 0.5:
+        flip = 1 > 0.5 #np.random.rand() > 0.5
+        if flip:
             img = np.fliplr(img).copy()  # flip the image
             lx1, lx2 = np.array(bboxes[:, 0]), np.array(bboxes[:, 2])
             # Flip the bounding box. +1 for correct indexing
