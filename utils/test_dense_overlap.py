@@ -1,4 +1,4 @@
-from dense_overlap import compute_dense_overlap
+from .dense_overlap import compute_dense_overlap
 from scipy.io import loadmat
 import numpy as np
 
