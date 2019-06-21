@@ -88,7 +88,7 @@ class WIDERFace(dataset.Dataset):
                 bboxes[:, 2] = bboxes[:, 0] + bboxes[:, 2] - 1
                 bboxes[:, 3] = bboxes[:, 1] + bboxes[:, 3] - 1
 
-                d = {
+                datum = {
                     "img_path": img,
                     "bboxes": bboxes[:, 0:4],
                     "blur": bboxes[:, 4],
@@ -99,7 +99,7 @@ class WIDERFace(dataset.Dataset):
                     "pose": bboxes[:, 9]
                 }
 
-                self.data.append(d)
+                self.data.append(datum)
 
         elif self.split == "test":
             data = open(path).readlines()
@@ -107,8 +107,8 @@ class WIDERFace(dataset.Dataset):
 
     def get_all_bboxes(self):
         bboxes = np.empty((0, 4))
-        for d in self.data:
-            bboxes = np.vstack((bboxes, d['bboxes']))
+        for datum in self.data:
+            bboxes = np.vstack((bboxes, datum['bboxes']))
 
         return bboxes
 
@@ -179,14 +179,14 @@ class WIDERFace(dataset.Dataset):
         return img, class_maps, regress_maps
 
     def __getitem__(self, index):
-        d = self.data[index]
+        datum = self.data[index]
 
         image_path = self.dataset_root / \
-            "WIDER_{0}".format(self.split) / "images" / d['img_path']
+            "WIDER_{0}".format(self.split) / "images" / datum['img_path']
         image = Image.open(image_path).convert('RGB')
 
         if self.split == 'train':
-            bboxes = d['bboxes']
+            bboxes = datum['bboxes']
 
             if self.debug:
                 if bboxes.shape[0] == 0:
@@ -212,12 +212,12 @@ class WIDERFace(dataset.Dataset):
             if self.transforms is not None:
                 img = self.transforms(image)
 
-            # bboxes = d['bboxes']
+            # bboxes = datum['bboxes']
 
-            return img, d['img_path']
+            return img, datum['img_path']
 
         elif self.split == 'test':
-            filename = d['img_path']
+            filename = datum['img_path']
 
             if self.transforms is not None:
                 img = self.transforms(image)

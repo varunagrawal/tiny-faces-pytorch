@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def nms(dets, thresh):
     """
     Courtesy of Ross Girshick

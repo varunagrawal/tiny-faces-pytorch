@@ -1,16 +1,17 @@
-import numpy as np
-from tqdm import tqdm
-from sklearn.externals import joblib
-from PIL import Image, ImageDraw
+
 import argparse
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
-from .k_medoids import kMedoids
-from .metrics import rect_dist, jaccard_index
-
+import numpy as np
+from PIL import Image, ImageDraw
 from pyclust import KMedoids
 from pyclustering.cluster.kmedoids import kmedoids
+from sklearn.externals import joblib
+from tqdm import tqdm
+
+from .k_medoids import kMedoids
+from .metrics import jaccard_index, rect_dist
 
 
 def centralize_bbox(bboxes):

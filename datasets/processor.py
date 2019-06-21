@@ -13,10 +13,11 @@ logger = logging.getLogger("detector")
 
 class DataProcessor:
     """
-    This is a helper class to abstract out all the operation needed during the data-loading pipeline of the Tiny Faces
-    object detector.
+    This is a helper class to abstract out all the operation needed during the data-loading
+    pipeline of the Tiny Faces object detector.
 
-    The idea is that this can act as a mixin that enables torch dataloaders with the heatmap generation semantics.
+    The idea is that this can act as a mixin that enables torch dataloaders with the heatmap
+    generation semantics.
     """
     def __init__(self, input_size, heatmap_size, pos_thresh, neg_thresh, templates, img_means=None, rf=None):
         self.input_size = input_size

@@ -68,17 +68,14 @@ class DetectionModel(nn.Module):
         x = self.model.relu(x)
         x = self.model.maxpool(x)
 
-        x = self.model.layer1(x)
-        res2 = x
+        # x = self.model.layer1(x)
+        # res2 = x
 
         x = self.model.layer2(x)
         res3 = x
 
         x = self.model.layer3(x)
         res4 = x
-
-        # x = self.model.layer4(x)
-        # res5 = x
 
         score_res3 = self.score_res3(res3)
 

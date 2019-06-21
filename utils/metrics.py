@@ -1,7 +1,8 @@
 import json
+import warnings
+
 import numpy as np
 from tqdm import tqdm
-import warnings
 
 
 def jaccard_index(box_a, box_b, indices=[]):
@@ -9,7 +10,8 @@ def jaccard_index(box_a, box_b, indices=[]):
     Compute the Jaccard Index (Intersection over Union) of 2 boxes. Each box is (x1, y1, x2, y2).
     :param box_a:
     :param box_b:
-    :param indices: The indices of box_a and box_b as [box_a_idx, box_b_idx]. Helps in debugging DivideByZero errors
+    :param indices: The indices of box_a and box_b as [box_a_idx, box_b_idx].
+                    Helps in debugging DivideByZero errors
     :return:
     """
     # area of bounding boxes
@@ -207,4 +209,3 @@ def compute_model_score(pred_file, gt_file, class_id=3):
 
     ap, prec, rec = average_precision(confidence, BB, image_ids, class_recs, npos)
     return ap, prec, rec
-

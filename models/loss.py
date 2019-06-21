@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 
 
@@ -7,9 +6,9 @@ class AvgMeter:
         self.average = 0
         self.num_averaged = 0
 
-    def update(self, loss, sz):
+    def update(self, loss, size):
         n = self.num_averaged
-        m = n + sz
+        m = n + size
         self.average = ((n * self.average) + float(loss)) / m
         self.num_averaged = m
 

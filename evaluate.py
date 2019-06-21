@@ -1,17 +1,19 @@
+import argparse
+import json
 import os
 import os.path as osp
+
 import numpy as np
 import torch
-import json
 from sklearn.externals import joblib
 from torch.utils import data
 from torchvision import transforms
+from tqdm import tqdm
+
 import trainer
-import argparse
 from datasets import get_dataloader
 from datasets.wider_face import WIDERFace
 from models.model import DetectionModel
-from tqdm import tqdm
 
 
 def arguments():

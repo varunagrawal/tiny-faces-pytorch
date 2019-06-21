@@ -1,12 +1,12 @@
+from pathlib import Path
+
 import numpy as np
 import torch
-from torchvision import transforms
 from torch.nn import functional as nnfunc
-from pathlib import Path
-from tqdm import tqdm
-from utils.nms import nms
+from torchvision import transforms
+
 from models.utils import get_bboxes
-import json
+from utils.nms import nms
 
 
 def print_state(idx, epoch, size, loss_cls, loss_reg):
@@ -95,7 +95,8 @@ def train(model, loss_fn, optimizer, dataloader, epoch, device):
 #     return dets
 
 
-def get_detections(model, img, templates, rf, img_transforms, prob_thresh=0.65, nms_thresh=0.3, device=None):
+def get_detections(model, img, templates, rf, img_transforms,
+                   prob_thresh=0.65, nms_thresh=0.3, device=None):
     model = model.to(device)
     model.eval()
 
@@ -111,7 +112,7 @@ def get_detections(model, img, templates, rf, img_transforms, prob_thresh=0.65, 
 
     min_side = np.min(image.size)
 
-    for s, scale in enumerate(scales_list):
+    for scale in scales_list:
         # scale the images
         scaled_image = transforms.functional.resize(image,
                                                     np.int(min_side*scale))
@@ -128,6 +129,7 @@ def get_detections(model, img, templates, rf, img_transforms, prob_thresh=0.65, 
         output = model(x)
 
         # first `num_templates` channels are class maps
+        #TODO Peiyun's code deals with scores and sigmoid probs separately. Check if that matters.
         score_cls = torch.sigmoid(output[:, :num_templates, :, :])
         score_cls = score_cls.data.cpu().numpy().transpose((0, 2, 3, 1))
 

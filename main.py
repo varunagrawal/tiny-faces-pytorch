@@ -1,14 +1,15 @@
 import argparse
+import os
+import os.path as osp
+
 import torch
 from torch import optim
 from torchvision import transforms
-from models.model import DetectionModel
-from models.loss import DetectionCriterion
-from datasets import get_dataloader
-import trainer
 
-import os
-import os.path as osp
+import trainer
+from datasets import get_dataloader
+from models.loss import DetectionCriterion
+from models.model import DetectionModel
 
 
 def arguments():
@@ -77,7 +78,7 @@ def main():
 
     # train and evalute for `epochs`
     for epoch in range(args.start_epoch, args.epochs):
-        # scheduler.step()
+        scheduler.step()
         trainer.train(model, loss_fn, optimizer, train_loader, epoch, device=device)
 
         if (epoch+1) % args.save_every == 0:
