@@ -25,3 +25,6 @@ cluster:
 
 debug: 
         $(PYTHON) main.py $(TRAINDATA) $(VALDATA) --dataset-root $(ROOT) --batch-size 1 --workers 0
+
+debug-evaluate: 
+        $(PYTHON) evaluate.py $(VALDATA) --dataset-root $(ROOT) --checkpoint $(CHECKPOINT) --split val --batch-size 1 --workers 0
