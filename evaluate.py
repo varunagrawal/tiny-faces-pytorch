@@ -39,7 +39,7 @@ def dataloader(args):
                                      std=[0.229, 0.224, 0.225])
     val_transforms = transforms.Compose([
         transforms.ToTensor(),
-        # normalize
+        normalize
     ])
 
     val_loader, templates = get_dataloader(args.dataset, args,
@@ -89,7 +89,6 @@ def run(model, val_loader, templates, prob_thresh, nms_thresh, device, split, de
             print(img.shape)
             mean = torch.as_tensor([0.485, 0.456, 0.406], dtype=torch.float32, device=img.device)
             std = torch.as_tensor([0.229, 0.224, 0.225], dtype=torch.float32, device=img.device)
-            # img.mul_(std[:, None, None]).add_(mean[:, None, None])
             im = Image.fromarray((img[0] * 255).permute((1, 2, 0)).numpy().astype('uint8'), 'RGB')
             print(dets.shape)
             visualize.visualize_bboxes(im, dets)

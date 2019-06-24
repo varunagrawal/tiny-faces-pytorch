@@ -214,17 +214,9 @@ class WIDERFace(dataset.Dataset):
             # NOTE Return only the image and the image path.
             # Use the eval_tools to get the final results.
             if self.transforms is not None:
-                print("Performaing transforms in val")
-                print(self.transforms)
-                img = self.transforms(image)
+                # Only convert to tensor since we do normalization after rescaling
+                img = transforms.functional.to_tensor(image)
 
-            # if self.debug:
-            #     bboxes = datum['bboxes']
-            #     # Visualize stuff
-            #     im = Image.fromarray(img.permute((1, 2, 0)).numpy().astype('uint8'), 'RGB')
-            #     visualize.visualize_bboxes(image, np.asarray([]))
-            #     # and now we exit
-            #     exit(0)
 
             return img, datum['img_path']
 
