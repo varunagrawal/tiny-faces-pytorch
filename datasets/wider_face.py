@@ -1,10 +1,14 @@
+from pathlib import Path
+
 import numpy as np
 import torch
-from pathlib import Path
 from PIL import Image
 from torch.utils.data import dataset
-from .processor import DataProcessor
 from torchvision import transforms
+
+from utils import visualize
+
+from .processor import DataProcessor
 
 
 class WIDERFace(dataset.Dataset):
@@ -161,8 +165,8 @@ class WIDERFace(dataset.Dataset):
             print("Negatives", class_maps[class_maps == -1].sum())
 
             # Visualize stuff
-            self.processor.visualize_bboxes(
-                Image.fromarray(img.astype('uint8'), 'RGB'), bboxes)
+            visualize.visualize_bboxes(Image.fromarray(img.astype('uint8'), 'RGB'),
+                                   bboxes)
             self.processor.visualize_heatmaps(Image.fromarray(img.astype('uint8'), 'RGB'),
                                               class_maps, regress_maps, self.templates, iou=iou)
 

@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy
 
-from utils.visualize import draw_bounding_box
+from utils.visualize import draw_bounding_box, render_and_save_bboxes, visualize_bboxes
 from utils.nms import nms
 from utils.metrics import rect_dist
 from utils.dense_overlap import compute_dense_overlap
@@ -305,40 +305,6 @@ class DataProcessor:
 
         # Return heatmaps
         return class_maps, regress_maps, iou
-
-    @staticmethod
-    def visualize_bboxes(image, bboxes):
-        """
-
-        :param image: PIL image
-        :param bboxes:
-        :return:
-        """
-        print("Number of GT bboxes", bboxes.shape[0])
-        for idx, bbox in enumerate(bboxes):
-            bbox = np.round(np.array(bbox))
-            # print(bbox)
-            image = draw_bounding_box(image, bbox, {"name": "car {0}".format(idx)})
-
-        image.show(title="GT BBox")
-
-    @staticmethod
-    def render_and_save_bboxes(image, image_id, bboxes, scores, scales, directory="qualitative"):
-        """
-        Render the bboxes on the image and save the image
-        :param image: PIL image
-        :param image_id:
-        :param bboxes:
-        :param scores:
-        :param scales:
-        :param directory:
-        :return:
-        """
-        for idx, bbox in enumerate(bboxes):
-            bbox = np.round(np.array(bbox))
-            image = draw_bounding_box(image, bbox, {'score': scores[idx], 'scale': scales[idx]})
-
-        image.save("{0}/{1}.jpg".format(directory, image_id))
 
     def visualize_heatmaps(self, img, cls_map, reg_map, templates, prob_thresh=1, nms_thresh=1, iou=None):
         """

@@ -83,18 +83,6 @@ def train(model, loss_fn, optimizer, dataloader, epoch, device):
                     loss_fn.reg_average.average)
 
 
-# def eval(model, dataloader, templates, prob_thresh=0.65, nms_thresh=0.3, device=None):
-#     print("Running multiscale evaluation code on val set")
-
-#     dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
-#     results = []
-
-#     for idx, (img, filename) in tqdm(enumerate(dataloader), total=len(dataloader)):
-#         img_dets = get_detections(model, img)
-
-#     return dets
-
-
 def get_detections(model, img, templates, rf, img_transforms,
                    prob_thresh=0.65, nms_thresh=0.3, device=None):
     model = model.to(device)
