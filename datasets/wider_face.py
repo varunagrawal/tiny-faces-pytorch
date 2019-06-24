@@ -180,7 +180,7 @@ class WIDERFace(dataset.Dataset):
         # img is type float64. Convert it to uint8 so torch knows to treat it like an image
         img = img.astype(np.uint8)
 
-        return img, class_maps, regress_maps
+        return img, class_maps, regress_maps, bboxes
 
     def __getitem__(self, index):
         datum = self.data[index]
@@ -195,10 +195,10 @@ class WIDERFace(dataset.Dataset):
             if self.debug:
                 if bboxes.shape[0] == 0:
                     print(image_path)
-                print(index)
-                print(image_path)
+                print("Dataset index: \t", index)
+                print("image path:\t", image_path)
 
-            img, class_map, reg_map = self.process_inputs(image, bboxes)
+            img, class_map, reg_map, bboxes = self.process_inputs(image, bboxes)
 
             # convert everything to tensors
             if self.transforms is not None:
@@ -214,9 +214,17 @@ class WIDERFace(dataset.Dataset):
             # NOTE Return only the image and the image path.
             # Use the eval_tools to get the final results.
             if self.transforms is not None:
+                print("Performaing transforms in val")
+                print(self.transforms)
                 img = self.transforms(image)
 
-            # bboxes = datum['bboxes']
+            # if self.debug:
+            #     bboxes = datum['bboxes']
+            #     # Visualize stuff
+            #     im = Image.fromarray(img.permute((1, 2, 0)).numpy().astype('uint8'), 'RGB')
+            #     visualize.visualize_bboxes(image, np.asarray([]))
+            #     # and now we exit
+            #     exit(0)
 
             return img, datum['img_path']
 

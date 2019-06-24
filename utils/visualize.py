@@ -14,7 +14,7 @@ def draw_bounding_box(img, bbox, labels):
     for i, k in enumerate(labels.keys()):
         w, h = font.getsize(labels[k])
         # draw.rectangle((bbox[0], bbox[1] + i*h, bbox[0] + w, bbox[1] + (i+2)*h), fill=color)
-        draw.text((bbox[0], bbox[1] + i*h), "{0}:{1:.3f} ".format(k, labels[k]), fill=color)
+        draw.text((bbox[0], bbox[1] + i*h), "{0}:{1:.3} ".format(k, labels[k]), fill=color)
 
     return img
 

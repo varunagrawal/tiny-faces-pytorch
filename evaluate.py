@@ -5,6 +5,7 @@ import os.path as osp
 
 import numpy as np
 import torch
+from PIL import Image
 from sklearn.externals import joblib
 from torch.utils import data
 from torchvision import transforms
@@ -14,6 +15,7 @@ import trainer
 from datasets import get_dataloader
 from datasets.wider_face import WIDERFace
 from models.model import DetectionModel
+from utils import visualize
 
 
 def arguments():
@@ -26,7 +28,8 @@ def arguments():
     parser.add_argument("--prob_thresh", type=float, default=0.7)
     parser.add_argument("--nms_thresh", type=float, default=0.1)
     parser.add_argument("--workers", default=8, type=int)
-    parser.add_argument("--batch_size", default=1)
+    parser.add_argument("--batch_size", default=1, type=int)
+    parser.add_argument("--debug", action="store_true")
 
     return parser.parse_args()
 
@@ -36,7 +39,7 @@ def dataloader(args):
                                      std=[0.229, 0.224, 0.225])
     val_transforms = transforms.Compose([
         transforms.ToTensor(),
-        normalize
+        # normalize
     ])
 
     val_loader, templates = get_dataloader(args.dataset, args,
@@ -76,11 +79,23 @@ def write_results(dets, img_path, split):
             f.write(d)
 
 
-def run(model, val_loader, templates, prob_thresh, nms_thresh, device, split):
+def run(model, val_loader, templates, prob_thresh, nms_thresh, device, split, debug=False):
     for idx, (img, filename) in tqdm(enumerate(val_loader), total=len(val_loader)):
         dets = trainer.get_detections(model, img, templates, val_loader.dataset.rf,
                                       val_loader.dataset.transforms, prob_thresh,
                                       nms_thresh, device)
+
+        if debug:
+            print(img.shape)
+            mean = torch.as_tensor([0.485, 0.456, 0.406], dtype=torch.float32, device=img.device)
+            std = torch.as_tensor([0.229, 0.224, 0.225], dtype=torch.float32, device=img.device)
+            # img.mul_(std[:, None, None]).add_(mean[:, None, None])
+            im = Image.fromarray((img[0] * 255).permute((1, 2, 0)).numpy().astype('uint8'), 'RGB')
+            print(dets.shape)
+            visualize.visualize_bboxes(im, dets)
+
+            if idx > 2:
+                exit(0)
 
         write_results(dets, filename[0], split)
     return dets
@@ -101,7 +116,8 @@ def main():
 
     with torch.no_grad():
         # run model on val/test set and generate results files
-        run(model, val_loader, templates, args.prob_thresh, args.nms_thresh, device, args.split)
+        run(model, val_loader, templates, args.prob_thresh, args.nms_thresh, device, args.split,
+            debug=args.debug)
 
 
 if __name__ == "__main__":

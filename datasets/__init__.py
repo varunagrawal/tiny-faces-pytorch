@@ -31,7 +31,8 @@ def get_dataloader(datapath, args, num_templates=25,
 
     data_loader = data.DataLoader(WIDERFace(osp.expanduser(datapath), templates,
                                             train=train, split=split, img_transforms=img_transforms,
-                                            dataset_root=osp.expanduser(args.dataset_root)),
+                                            dataset_root=osp.expanduser(args.dataset_root),
+                                            debug=args.debug),
                                   batch_size=args.batch_size, shuffle=train,
                                   num_workers=args.workers, pin_memory=True)
 

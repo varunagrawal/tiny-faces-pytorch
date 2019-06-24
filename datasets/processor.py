@@ -355,8 +355,8 @@ class DataProcessor:
         for idx, bbox in enumerate(bboxes):
             bbox = np.round(np.array(bbox))
             print(bbox)
-            # img = draw_bounding_box(img, bbox, {"name": "car {0}".format(np.around(bbox_iou[idx], decimals=2))})
-            img = draw_bounding_box(img, bbox, {"name": "car {0}".format(idx)})
+            # img = draw_bounding_box(img, bbox, {"name": "{0}".format(np.around(bbox_iou[idx], decimals=2))})
+            img = draw_bounding_box(img, bbox, {"name": "{0}".format(idx)})
 
             # if idx == 20:
             #     break
