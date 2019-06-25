@@ -84,7 +84,7 @@ def train(model, loss_fn, optimizer, dataloader, epoch, device):
 
 
 def get_detections(model, img, templates, rf, img_transforms,
-                   prob_thresh=0.65, nms_thresh=0.3, device=None):
+                   prob_thresh=0.65, nms_thresh=0.3, scales=(-2, -1, 0, 1), device=None):
     model = model.to(device)
     model.eval()
 
@@ -93,7 +93,7 @@ def get_detections(model, img, templates, rf, img_transforms,
     num_templates = templates.shape[0]
 
     # Evaluate over multiple scale
-    scales_list = [2 ** x for x in [-1, 0, 1]]
+    scales_list = [2 ** x for x in scales]
 
     # convert tensor to PIL image so we can perform resizing
     image = transforms.functional.to_pil_image(img[0])

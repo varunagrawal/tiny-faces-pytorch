@@ -57,8 +57,8 @@ class DetectionModel(nn.Module):
             # Be T'Challa. Don't freeze.
             {'params': self.model.parameters(), 'lr': lr},
             {'params': self.score_res3.parameters(), 'lr': 0.1*lr},
-            {'params': self.score_res4.parameters(), 'lr': 1*lr},  # freeze UpConv layer
-            {'params': self.score4_upsample.parameters(), 'lr': 0}
+            {'params': self.score_res4.parameters(), 'lr': 1*lr},
+            {'params': self.score4_upsample.parameters(), 'lr': 0}  # freeze UpConv layer
         ]
         return parameters
 

@@ -25,7 +25,7 @@ def arguments():
     parser.add_argument("--dataset-root")
     parser.add_argument("--checkpoint",
                         help="The path to the model checkpoint", default="")
-    parser.add_argument("--prob_thresh", type=float, default=0.7)
+    parser.add_argument("--prob_thresh", type=float, default=0.6)
     parser.add_argument("--nms_thresh", type=float, default=0.1)
     parser.add_argument("--workers", default=8, type=int)
     parser.add_argument("--batch_size", default=1, type=int)
@@ -83,7 +83,7 @@ def run(model, val_loader, templates, prob_thresh, nms_thresh, device, split, de
     for idx, (img, filename) in tqdm(enumerate(val_loader), total=len(val_loader)):
         dets = trainer.get_detections(model, img, templates, val_loader.dataset.rf,
                                       val_loader.dataset.transforms, prob_thresh,
-                                      nms_thresh, device)
+                                      nms_thresh, device=device)
 
         if debug:
             print(img.shape)
