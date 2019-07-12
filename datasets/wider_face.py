@@ -120,7 +120,6 @@ class WIDERFace(dataset.Dataset):
         return len(self.data)
 
     def process_inputs(self, image, bboxes):
-
         # Randomly resize the image
         rnd = np.random.rand()
         if rnd < 1 / 3:
