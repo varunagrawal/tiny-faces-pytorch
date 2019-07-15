@@ -15,8 +15,9 @@ def print_state(idx, epoch, size, loss_cls, loss_reg):
     else:
         message = "Val: [{0}/{1}]\t".format(idx, size)
 
-    print(message + '\tloss_cls: {loss_cls:.6f}\tloss_reg: {loss_reg:.6f}'.format(
-        loss_cls=loss_cls, loss_reg=loss_reg))
+    print(message +
+          '\tloss_cls: {loss_cls:.6f}' \
+          '\tloss_reg: {loss_reg:.6f}'.format(loss_cls=loss_cls, loss_reg=loss_reg))
 
 
 def save_checkpoint(state, filename="checkpoint.pth", save_path="weights"):
@@ -117,7 +118,7 @@ def get_detections(model, img, templates, rf, img_transforms,
         output = model(x)
 
         # first `num_templates` channels are class maps
-        #TODO Peiyun's code deals with scores and sigmoid probs separately. Check if that matters.
+        # TODO Peiyun's code deals with scores and sigmoid probs separately. Check if that matters.
         score_cls = torch.sigmoid(output[:, :num_templates, :, :])
         score_cls = score_cls.data.cpu().numpy().transpose((0, 2, 3, 1))
 
@@ -129,7 +130,7 @@ def get_detections(model, img, templates, rf, img_transforms,
 
         scales = np.ones((t_bboxes.shape[0], 1)) / scale
         # append scores at the end for NMS
-        d = np.hstack((t_bboxes, scores, scales))
+        d = np.hstack((t_bboxes, scores))
 
         dets = np.vstack((dets, d))
 
