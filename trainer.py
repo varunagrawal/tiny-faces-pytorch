@@ -89,7 +89,7 @@ def get_detections(model, img, templates, rf, img_transforms,
     model = model.to(device)
     model.eval()
 
-    dets = np.empty((0, 6))  # store bbox (x1, y1, x2, y2), score and scale
+    dets = np.empty((0, 5))  # store bbox (x1, y1, x2, y2), score
 
     num_templates = templates.shape[0]
 
