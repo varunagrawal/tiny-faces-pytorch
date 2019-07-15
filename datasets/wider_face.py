@@ -15,6 +15,7 @@ class WIDERFace(dataset.Dataset):
     """The WIDERFace dataset is generated using MATLAB,
     so a lot of small housekeeping elements have been added
     to take care of the indexing discrepancies."""
+
     def __init__(self, path, templates, img_transforms=None, dataset_root="", split="train",
                  train=True, input_size=(500, 500), heatmap_size=(63, 63),
                  pos_thresh=0.7, neg_thresh=0.3, pos_fraction=0.5, debug=False):
@@ -145,6 +146,7 @@ class WIDERFace(dataset.Dataset):
         flip = np.random.rand() > 0.5
         if flip:
             img = np.fliplr(img).copy()  # flip the image
+
             lx1, lx2 = np.array(bboxes[:, 0]), np.array(bboxes[:, 2])
             # Flip the bounding box. +1 for correct indexing
             bboxes[:, 0] = self.input_size[1] - lx2 + 1
@@ -153,16 +155,13 @@ class WIDERFace(dataset.Dataset):
             pad_mask = np.fliplr(pad_mask)
 
         # Get the ground truth class and regression maps
-        class_maps, regress_maps, iou = self.processor.get_heatmaps(bboxes, pad_mask)
+        class_maps, regress_maps, iou = self.processor.get_heatmaps(bboxes,
+                                                                    pad_mask)
 
         if self.debug:
-            # Confirm is balance sampling works
-            print("Positives", class_maps[class_maps == 1].sum())
-            print("Negatives", class_maps[class_maps == -1].sum())
-
             # Visualize stuff
             visualize.visualize_bboxes(Image.fromarray(img.astype('uint8'), 'RGB'),
-                                   bboxes)
+                                       bboxes)
             self.processor.visualize_heatmaps(Image.fromarray(img.astype('uint8'), 'RGB'),
                                               class_maps, regress_maps, self.templates, iou=iou)
 
@@ -181,8 +180,8 @@ class WIDERFace(dataset.Dataset):
     def __getitem__(self, index):
         datum = self.data[index]
 
-        image_path = self.dataset_root / \
-            "WIDER_{0}".format(self.split) / "images" / datum['img_path']
+        image_root = self.dataset_root / "WIDER_{0}".format(self.split)
+        image_path = image_root / "images" / datum['img_path']
         image = Image.open(image_path).convert('RGB')
 
         if self.split == 'train':
@@ -194,7 +193,8 @@ class WIDERFace(dataset.Dataset):
                 print("Dataset index: \t", index)
                 print("image path:\t", image_path)
 
-            img, class_map, reg_map, bboxes = self.process_inputs(image, bboxes)
+            img, class_map, reg_map, bboxes = self.process_inputs(image,
+                                                                  bboxes)
 
             # convert everything to tensors
             if self.transforms is not None:
@@ -202,7 +202,8 @@ class WIDERFace(dataset.Dataset):
                 # this converts from (HxWxC) to (CxHxW) as well
                 img = self.transforms(img)
 
-            class_map, reg_map = torch.from_numpy(class_map), torch.from_numpy(reg_map)
+            class_map = torch.from_numpy(class_map)
+            reg_map = torch.from_numpy(reg_map)
 
             return img, class_map, reg_map
 
@@ -212,7 +213,6 @@ class WIDERFace(dataset.Dataset):
             if self.transforms is not None:
                 # Only convert to tensor since we do normalization after rescaling
                 img = transforms.functional.to_tensor(image)
-
 
             return img, datum['img_path']
 
