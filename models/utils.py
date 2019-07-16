@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def get_bboxes(score_cls, score_reg, templates, prob_thresh, rf, scale=1, refine=True):
+def get_bboxes(score_cls, score_reg, prob_cls, templates, prob_thresh, rf, scale=1, refine=True):
     """
     Convert model output tensor to a set of bounding boxes and their corresponding scores
     """
@@ -33,9 +33,9 @@ def get_bboxes(score_cls, score_reg, templates, prob_thresh, rf, scale=1, refine
                                           one_scale_template_ids[invalid_one_scale_idx]))
 
     # zero out prediction from templates that are invalid on this scale
-    score_cls[:, :, invalid_template_id] = 0.0
+    prob_cls[:, :, invalid_template_id] = 0.0
 
-    indices = np.where(score_cls > prob_thresh)
+    indices = np.where(prob_cls > prob_thresh)
     fb, fy, fx, fc = indices
 
     scores = score_cls[fb, fy, fx, fc]

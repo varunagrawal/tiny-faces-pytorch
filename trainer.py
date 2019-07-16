@@ -118,14 +118,16 @@ def get_detections(model, img, templates, rf, img_transforms,
         output = model(x)
 
         # first `num_templates` channels are class maps
-        # TODO Peiyun's code deals with scores and sigmoid probs separately. Check if that matters.
-        score_cls = torch.sigmoid(output[:, :num_templates, :, :])
+        score_cls = output[:, :num_templates, :, :]
+        prob_cls = torch.sigmoid(score_cls)
+
         score_cls = score_cls.data.cpu().numpy().transpose((0, 2, 3, 1))
+        prob_cls = prob_cls.data.cpu().numpy().transpose((0, 2, 3, 1))
 
         score_reg = output[:, num_templates:, :, :]
         score_reg = score_reg.data.cpu().numpy().transpose((0, 2, 3, 1))
 
-        t_bboxes, scores = get_bboxes(score_cls, score_reg,
+        t_bboxes, scores = get_bboxes(score_cls, score_reg, prob_cls,
                                       templates, prob_thresh, rf, scale)
 
         scales = np.ones((t_bboxes.shape[0], 1)) / scale
