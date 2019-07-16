@@ -17,6 +17,9 @@ resume:
 evaluate: 
         $(PYTHON) evaluate.py $(VALDATA) --dataset-root $(ROOT) --checkpoint $(CHECKPOINT) --split val
 
+evaluation:
+        cd eval_tools/ && octave wider_eval.m
+
 test: 
         $(PYTHON) evaluate.py $(TESTDATA) --dataset-root $(ROOT) --checkpoint $(CHECKPOINT) --split test
 
