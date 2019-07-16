@@ -6,12 +6,19 @@ We use (and recommend) **Python 3.6+** for minimal pain when using this codebase
 
 **NOTE** Be sure to cite Peiyun's CVPR paper and this repo if you use this code!
 
+This code gives the following mAP results on the WIDER Face dataset:
+
+| Setting | mAP   |
+|---------|-------|
+| easy    | 0.902 |
+| medium  | 0.892 |
+| hard    | 0.797 |
+
 ## Getting Started
 
-We assume Python 
 - Clone this repository.
 - Download the WIDER Face dataset and annotations files to `data/WIDER`.
-- Install dependencies with `pip instll -r requirements.txt`.
+- Install dependencies with `pip install -r requirements.txt`.
 
 Your data directory should look like this for WIDERFace
 
@@ -35,6 +42,6 @@ In case you wish to change some settings (such as data location), you can modify
 
 To run evaluation and generate the output files as per the WIDERFace specification, simply run `make evaluate`. The results will be stored in the `val_results` directory.
 
-You can then use the dataset's `eval_tools` to generate the mAP numbers.
+You can then use the dataset's `eval_tools` to generate the mAP numbers (this needs Matlab/Octave).
 
 Similarly, to run the model on the test set, run `make test` to generate results in the `test_results` directory.
