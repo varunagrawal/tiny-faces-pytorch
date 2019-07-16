@@ -58,8 +58,9 @@ class DataProcessor:
 
         # add the average image so it gets subtracted later.
         for i, c in enumerate(self.img_means):
-            # img is a int8 array, so we need to scale the values accordingly
-            img_buf[:, :, i] = int(c*255)
+            img_buf[:, :, i] += c
+        # img is a int8 array, so we need to scale the values accordingly
+        img_buf = (img_buf * 255).astype(np.int8)
 
         img_buf[paste_box[1]:paste_box[3], paste_box[0]:paste_box[2], :] = img[crop_y1:crop_y2, crop_x1:crop_x2, :]
 
