@@ -80,7 +80,7 @@ def train(model, loss_fn, optimizer, dataloader, epoch, device):
         optimizer.step()
 
         print_state(idx, epoch, len(dataloader),
-                    loss_fn.cls_average.average,
+                    loss_fn.class_average.average,
                     loss_fn.reg_average.average)
 
 

@@ -92,3 +92,66 @@ def regression_refinement(tx, ty, tw, th, cx, cy, cw, ch, indices):
         [rcx - rcw / 2, rcy - rch / 2, rcx + rcw / 2, rcy + rch / 2]).T
 
     return bboxes
+
+
+def balance_sampling(label_cls, pos_fraction, sample_size=256):
+    """
+    Perform balance sampling by always sampling `pos_fraction` positive samples and
+    `(1-pos_fraction)` negative samples from the input
+    :param label_cls: Class labels as numpy.array.
+    :param pos_fraction: The maximum fraction of positive samples to keep.
+    :return:
+    """
+    pos_maxnum = sample_size * pos_fraction  # sample 128 positive points
+
+    # Find all the points where we have objects and ravel the indices to get a 1D array.
+    # This makes the subsequent operations easier to reason about
+    pos_idx_unraveled = np.where(label_cls == 1)
+    pos_idx = np.array(np.ravel_multi_index(
+        pos_idx_unraveled, label_cls.shape))
+
+    if pos_idx.size > pos_maxnum:
+        # Get all the indices of the locations to be zeroed out
+        didx = shuffle_index(pos_idx.size, pos_idx.size-pos_maxnum)
+        # Get the locations and unravel it so we can index
+        pos_idx_unraveled = np.unravel_index(pos_idx[didx], label_cls.shape)
+        label_cls[pos_idx_unraveled] = 0
+
+    neg_maxnum = pos_maxnum * (1 - pos_fraction) / pos_fraction
+    neg_idx_unraveled = np.where(label_cls == -1)
+    neg_idx = np.array(np.ravel_multi_index(neg_idx_unraveled,
+                                            label_cls.shape))
+
+    if neg_idx.size > neg_maxnum:
+        # Get all the indices of the locations to be zeroed out
+        ridx = shuffle_index(neg_idx.size, neg_maxnum)
+        didx = np.arange(0, neg_idx.size)
+        didx = np.delete(didx, ridx)
+        neg_idx = np.unravel_index(neg_idx[didx], label_cls.shape)
+        label_cls[neg_idx] = 0
+
+    return label_cls
+
+
+def shuffle_index(n, n_out):
+    """
+    Randomly shuffle the indices and return a subset of them
+    :param n: The number of indices to shuffle.
+    :param n_out: The number of output indices.
+    :return:
+    """
+    n = int(n)
+    n_out = int(n_out)
+
+    if n == 0 or n_out == 0:
+        return np.empty(0)
+
+    x = np.random.permutation(n)
+
+    # the output should be at most the size of the input
+    assert n_out <= n
+
+    if n_out != n:
+        x = x[:n_out]
+
+    return x
