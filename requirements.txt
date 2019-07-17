@@ -1,10 +1,9 @@
 backcall==0.1.0
-Cython==0.28.2
 decorator==4.3.0
 ipython==6.4.0
 ipython-genutils==0.2.0
 jedi==0.12.0
-numpy==1.14.3
+numpy==1.16.4
 parso==0.2.1
 pexpect==4.5.0
 pickleshare==0.7.4
@@ -18,10 +17,9 @@ scikit-learn==0.19.1
 scipy==1.1.0
 simplegeneric==0.8.1
 six==1.11.0
-sk-video==1.1.10
-sklearn==0.0
-torch==0.4.0
-torchvision==0.2.1
+sklearn==0.20.1
+torch==1.1.0
+torchvision==0.3
 tqdm==4.23.3
 traitlets==4.3.2
 wcwidth==0.1.7
