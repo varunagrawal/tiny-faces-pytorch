@@ -32,6 +32,10 @@ Your data directory should look like this for WIDERFace
         - WIDER_test
 ```
 
+## Pretrained Weights
+
+You can find the pretrained weights which get the above mAP results [here](https://drive.google.com/open?id=1V8c8xkMrQaCnd3MVChvJ2Ge-DUfXPHNu).
+
 ## Training
 
 Just type `make` at the repo root and you should be good to go!
