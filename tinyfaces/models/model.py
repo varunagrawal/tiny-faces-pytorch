@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch import nn
 from torchvision.models import ResNet101_Weights, resnet101
 
@@ -104,24 +105,11 @@ class DetectionModel(nn.Module):
         score_res3 = self.score_res3(res3)
 
         score_res4 = self.score_res4(res4)
-        score4 = self.score4_upsample(score_res4)
-
-        # We need to do some fancy cropping to accomodate the difference in image sizes in eval
-        if not self.training:
-            # from vl_feats DagNN Crop
-            cropv = score4.size(2) - score_res3.size(2)
-            cropu = score4.size(3) - score_res3.size(3)
-            # if the crop is 0 (both the input sizes are the same)
-            # we do some arithmetic to allow python to index correctly
-            if cropv == 0:
-                cropv = -score4.size(2)
-            if cropu == 0:
-                cropu = -score4.size(3)
-
-            score4 = score4[:, :, 0:-cropv, 0:-cropu]
-        else:
-            # match the dimensions arbitrarily
-            score4 = score4[:, :, 0:score_res3.size(2), 0:score_res3.size(3)]
+        # we use align_corners=False since its behavior matches with OpenCV resize
+        score4 = F.interpolate(score_res4,
+                               size=score_res3.shape[2:4],
+                               mode='bilinear',
+                               align_corners=False)
 
         score = score_res3 + score4
 
