@@ -29,6 +29,7 @@ def arguments():
     parser.add_argument("--nms_thresh", type=float, default=0.3)
     parser.add_argument("--workers", default=8, type=int)
     parser.add_argument("--batch_size", default=1, type=int)
+    parser.add_argument("--results_dir", default=None)
     parser.add_argument("--debug", action="store_true")
 
     return parser.parse_args()
@@ -56,8 +57,8 @@ def get_model(checkpoint=None, num_templates=25):
     return model
 
 
-def write_results(dets, img_path, split):
-    results_dir = "{0}_results".format(split)
+def write_results(dets, img_path, split, results_dir=None):
+    results_dir = results_dir or "{0}_results".format(split)
 
     if not osp.exists(results_dir):
         os.makedirs(results_dir)
@@ -73,19 +74,22 @@ def write_results(dets, img_path, split):
 
         for x in dets:
             left, top = np.round(x[0]), np.round(x[1])
-            width, height, score = np.round(x[2]-x[0]+1), np.round(x[3]-x[1]+1), x[4]
+            width = np.round(x[2]-x[0]+1)
+            height = np.round(x[3]-x[1]+1)
+            score = x[4]
             d = "{0} {1} {2} {3} {4}\n".format(int(left), int(top),
                                                int(width), int(height), score)
             f.write(d)
 
 
-def run(model, val_loader, templates, prob_thresh, nms_thresh, device, split, debug=False):
+def run(model, val_loader, templates, prob_thresh, nms_thresh, device, split,
+        results_dir=None, debug=False):
     for idx, (img, filename) in tqdm(enumerate(val_loader), total=len(val_loader)):
         dets = trainer.get_detections(model, img, templates, val_loader.dataset.rf,
                                       val_loader.dataset.transforms, prob_thresh,
                                       nms_thresh, device=device)
 
-        write_results(dets, filename[0], split)
+        write_results(dets, filename[0], split, results_dir)
     return dets
 
 
@@ -104,8 +108,9 @@ def main():
 
     with torch.no_grad():
         # run model on val/test set and generate results files
-        run(model, val_loader, templates, args.prob_thresh, args.nms_thresh, device, args.split,
-            debug=args.debug)
+        run(model, val_loader, templates, args.prob_thresh, args.nms_thresh,
+            device, args.split,
+            results_dir=args.results_dir, debug=args.debug)
 
 
 if __name__ == "__main__":
