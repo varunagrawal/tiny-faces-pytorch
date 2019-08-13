@@ -5,58 +5,21 @@ import numpy as np
 from tqdm import tqdm
 
 
-def jaccard_index(box_a, box_b, indices=[]):
-    """
-    Compute the Jaccard Index (Intersection over Union) of 2 boxes. Each box is (x1, y1, x2, y2).
-    :param box_a:
-    :param box_b:
-    :param indices: The indices of box_a and box_b as [box_a_idx, box_b_idx].
-                    Helps in debugging DivideByZero errors
-    :return:
-    """
-    # area of bounding boxes
-    area_A = (box_a[2] - box_a[0]) * (box_a[3] - box_a[1])
-    area_B = (box_b[2] - box_b[0]) * (box_b[3] - box_b[1])
-
-    xA = max(box_a[0], box_b[0])
-    yA = max(box_a[1], box_b[1])
-    xB = min(box_a[2], box_b[2])
-    yB = min(box_a[3], box_b[3])
-
-    intersection = (xB - xA) * (yB - yA)
-    union = area_A + area_B - intersection
-
-    # return the intersection over union value
-    try:
-        if union <= 0:
-            iou = 0
-        else:
-            iou = intersection / union
-    except:
-        print(indices)
-        print(box_a)
-        print(box_b)
-        print(area_A, area_B, intersection)
-        exit(1)
-
-    return iou
-
-
 def rect_dist(I, J):
     if len(I.shape) == 1:
         I = I[np.newaxis, :]
         J = J[np.newaxis, :]
 
     # area of boxes
-    aI = (I[:, 2] - I[:, 0]) * (I[:, 3] - I[:, 1])
-    aJ = (J[:, 2] - J[:, 0]) * (J[:, 3] - J[:, 1])
+    aI = (I[:, 2] - I[:, 0] + 1) * (I[:, 3] - I[:, 1] + 1)
+    aJ = (J[:, 2] - J[:, 0] + 1) * (J[:, 3] - J[:, 1] + 1)
 
     x1 = np.maximum(I[:, 0], J[:, 0])
     y1 = np.maximum(I[:, 1], J[:, 1])
     x2 = np.minimum(I[:, 2], J[:, 2])
     y2 = np.minimum(I[:, 3], J[:, 3])
 
-    aIJ = (x2-x1) * (y2-y1) * (np.logical_and(x2 > x1, y2 > y1))
+    aIJ = (x2 - x1 + 1) * (y2 - y1 + 1) * (np.logical_and(x2 > x1, y2 > y1))
 
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
@@ -64,15 +27,6 @@ def rect_dist(I, J):
             iou = aIJ / (aI + aJ - aIJ)
         except (RuntimeWarning, Exception):
             iou = np.zeros(aIJ.shape)
-
-    # try:
-    #     iou = aIJ / (aI + aJ - aIJ)
-    # except (RuntimeWarning, Exception):
-    #     print("Error in rect dist!")
-    #     print(I)
-    #     print(J)
-    #     print(aIJ)
-    #     exit(0)
 
     # set NaN, inf, and -inf to 0
     iou[np.isnan(iou)] = 0

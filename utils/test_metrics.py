@@ -3,11 +3,6 @@ from scipy.io import loadmat
 from .metrics import jaccard_index, rect_dist
 
 
-def test_jaccard_index(box1, box2, gt_iou):
-    iou = jaccard_index(box1, box2)
-    print("Is my jaccard index computation correct?", np.array_equal(iou, gt_iou))
-
-
 def test_rect_dist(x, y, gt_dist):
     d = rect_dist(x, y)
     print("Is my rect_dist code correct?", np.array_equal(d, gt_dist))
