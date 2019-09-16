@@ -22,7 +22,7 @@ def arguments():
     parser.add_argument("--lr", default=1e-4, type=float)
     parser.add_argument("--weight-decay", default=0.0005, type=float)
     parser.add_argument("--momentum", default=0.9, type=float)
-    parser.add_argument("--batch_size", default=16, type=int)
+    parser.add_argument("--batch_size", default=12, type=int)
     parser.add_argument("--workers", default=8, type=int)
     parser.add_argument("--start-epoch", default=0, type=int)
     parser.add_argument("--epochs", default=50, type=int)
@@ -79,8 +79,8 @@ def main():
 
     # train and evalute for `epochs`
     for epoch in range(args.start_epoch, args.epochs):
-        scheduler.step()
         trainer.train(model, loss_fn, optimizer, train_loader, epoch, device=device)
+        scheduler.step()
 
         if (epoch+1) % args.save_every == 0:
             trainer.save_checkpoint({

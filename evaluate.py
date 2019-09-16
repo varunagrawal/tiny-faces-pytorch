@@ -6,7 +6,6 @@ import os.path as osp
 import numpy as np
 import torch
 from PIL import Image
-from sklearn.externals import joblib
 from torch.utils import data
 from torchvision import transforms
 from tqdm import tqdm
