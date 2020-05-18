@@ -72,10 +72,13 @@ class WIDERFace(dataset.Dataset):
 
                 bboxes = np.empty((n, 10))
 
-                for b in range(n):
-                    bboxes[b, :] = [abs(float(x))
-                                    for x in lines[idx].strip().split()]
+                if n == 0:
                     idx += 1
+                else:
+                    for b in range(n):
+                        bboxes[b, :] = [abs(float(x))
+                                        for x in lines[idx].strip().split()]
+                        idx += 1
 
                 # remove invalid bboxes where w or h are 0
                 invalid = np.where(np.logical_or(bboxes[:, 2] == 0,
