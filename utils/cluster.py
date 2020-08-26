@@ -30,9 +30,17 @@ def centralize_bbox(bboxes):
 def compute_distances(bboxes):
     print("Computing distances")
     distances = np.zeros((len(bboxes), len(bboxes)))
+    area = (bboxes[:, 2] - bboxes[:, 0]) * (bboxes[:, 3] - bboxes[:, 1])
     for i in tqdm(range(len(bboxes)), total=len(bboxes)):
-        for j in range(len(bboxes)):
-            distances[i, j] = 1 - jaccard_index(bboxes[i, :], bboxes[j, :], (i, j))
+        xA = np.maximum(bboxes[:, 0], bboxes[i, 0])
+        yA = np.maximum(bboxes[:, 1], bboxes[i, 1])
+        xB = np.minimum(bboxes[:, 2], bboxes[i, 2])
+        yB = np.minimum(bboxes[:, 3], bboxes[i, 3])
+
+        intersection = (xB - xA) * (yB - yA)
+        union = area[i] + area[:] - intersection
+        iou = np.divide(intersection, union, out=np.zeros_like(union, dtype=float), where=union>0)
+        distances[i, :] = 1 - iou
 
     return distances
 
