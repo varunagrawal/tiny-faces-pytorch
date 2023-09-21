@@ -14,7 +14,7 @@ pyclust==0.2.0
 pyclustering==0.8.1
 Pygments==2.15.0
 scikit-learn==0.20.1
-scipy==1.1.0
+scipy==1.10.0
 simplegeneric==0.8.1
 six==1.11.0
 torch==1.13.1
