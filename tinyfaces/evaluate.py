@@ -4,10 +4,10 @@ import os.path as osp
 
 import numpy as np
 import torch
-from datasets import get_dataloader
 from torchvision import transforms
 from tqdm import tqdm
 
+from tinyfaces.datasets import get_dataloader
 from tinyfaces.models.model import DetectionModel
 from tinyfaces.models.utils import get_bboxes
 from tinyfaces.utils.nms import nms
