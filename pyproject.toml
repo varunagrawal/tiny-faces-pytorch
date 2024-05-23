@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "tinyfaces"
+version = "1.0.0"
+authors = ["Varun Agrawal <varunagrawal@gatech.edu>"]
+description = "Finding Tiny Faces in PyTorch"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+loguru = "^0.7.2"
+numpy = "^1.26.4"
+scipy = "^1.12.0"
+Pillow = "^10.3.0"
+pyclust = "^0.2.0"
+pyclustering = "^0.10.1.2"
+torch = "^2.3.0"
+torchvision = "^0.18.0"
+tqdm = "^4.66.2"
+treelib = "^1.7.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+[project.urls]
+"Homepage" = "https://github.com/varunagrawal/tiny-faces-pytorch"
+"Bug Tracker" = "https://github.com/varunagrawal/tiny-faces-pytorch/issues"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+  "error",
+  "ignore::UserWarning",
+  "ignore:.*:DeprecationWarning",
+]
