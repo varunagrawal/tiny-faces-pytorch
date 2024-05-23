@@ -27,7 +27,7 @@ def arguments():
     parser.add_argument("--start-epoch", default=0, type=int)
     parser.add_argument("--epochs", default=50, type=int)
     parser.add_argument("--save-every", default=10, type=int)
-    parser.add_argument("--resume", default="")
+    parser.add_argument("--resume", action="store_true")
     parser.add_argument("--debug", action="store_true")
 
     return parser.parse_args()
@@ -60,6 +60,7 @@ def main():
     else:
         device = torch.device('cpu')
 
+    # As per Peiyun, SGD is more robust than Adam and works really well
     optimizer = optim.SGD(model.learnable_parameters(args.lr),
                           lr=args.lr,
                           momentum=args.momentum,
