@@ -1,9 +1,12 @@
-import numpy as np
-import os.path as osp
 import json
-from utils.cluster import compute_kmedoids
-from .wider_face import WIDERFace
+import os.path as osp
+
+import numpy as np
 from torch.utils import data
+
+from utils.cluster import compute_kmedoids
+
+from .wider_face import WIDERFace
 
 
 def get_dataloader(datapath,

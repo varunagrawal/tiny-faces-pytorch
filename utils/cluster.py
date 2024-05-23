@@ -2,11 +2,11 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
+import joblib
 import numpy as np
 from PIL import Image, ImageDraw
 from pyclust import KMedoids
 from pyclustering.cluster.kmedoids import kmedoids
-import joblib
 from tqdm import tqdm
 
 from .k_medoids import kMedoids

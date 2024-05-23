@@ -1,11 +1,12 @@
-import numpy as np
+import logging
 from copy import deepcopy
 
-from utils.visualize import draw_bounding_box
-from utils.nms import nms
-from utils.metrics import rect_dist
+import numpy as np
+
 from utils.dense_overlap import compute_dense_overlap
-import logging
+from utils.metrics import rect_dist
+from utils.nms import nms
+from utils.visualize import draw_bounding_box
 
 logger = logging.getLogger("detector")
 
