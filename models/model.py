@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch import nn
-from torchvision.models import resnet101, ResNet101_Weights
+from torchvision.models import ResNet101_Weights, resnet101
 
 
 class DetectionModel(nn.Module):
@@ -11,7 +11,7 @@ class DetectionModel(nn.Module):
 
     def __init__(self,
                  base_model=resnet101,
-                 pretrained_weights=ResNet101_Weights.DEFAULT,
+                 pretrained_weights=ResNet101_Weights.IMAGENET1K_V1,
                  num_templates=1,
                  num_objects=1):
         super().__init__()
