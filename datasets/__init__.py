@@ -33,11 +33,10 @@ def get_dataloader(datapath,
         # record templates
         json.dump(templates, open(template_file, "w"))
 
-    templates = np.round_(np.array(templates), decimals=8)
+    templates = np.round(np.array(templates), decimals=8)
 
     data_loader = data.DataLoader(WIDERFace(osp.expanduser(datapath),
                                             templates,
-                                            train=train,
                                             split=split,
                                             img_transforms=img_transforms,
                                             dataset_root=osp.expanduser(

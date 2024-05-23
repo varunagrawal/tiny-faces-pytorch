@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch import nn
-from torchvision.models import resnet101
+from torchvision.models import resnet101, ResNet101_Weights
 
 
 class DetectionModel(nn.Module):
@@ -9,11 +9,15 @@ class DetectionModel(nn.Module):
     Hybrid Model from Tiny Faces paper
     """
 
-    def __init__(self, base_model=resnet101, num_templates=1, num_objects=1):
+    def __init__(self,
+                 base_model=resnet101,
+                 pretrained_weights=ResNet101_Weights.DEFAULT,
+                 num_templates=1,
+                 num_objects=1):
         super().__init__()
         # 4 is for the bounding box offsets
         output = (num_objects + 4) * num_templates
-        self.model = base_model(pretrained=True)
+        self.model = base_model(weights=pretrained_weights)
 
         # delete unneeded layer
         del self.model.layer4
