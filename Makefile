@@ -1,6 +1,6 @@
 .RECIPEPREFIX +=
 
-PYTHON=python3
+PYTHON=python
 ROOT=data/WIDER
 TRAINDATA=$(ROOT)/wider_face_split/wider_face_train_bbx_gt.txt
 VALDATA=$(ROOT)/wider_face_split/wider_face_val_bbx_gt.txt
