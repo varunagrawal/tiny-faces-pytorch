@@ -40,11 +40,10 @@ def main():
 
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
-    img_transforms = transforms.Compose([
-        transforms.ToTensor(),
-        normalize
-    ])
-    train_loader, _ = get_dataloader(args.traindata, args, num_templates,
+    img_transforms = transforms.Compose([transforms.ToTensor(), normalize])
+    train_loader, _ = get_dataloader(args.traindata,
+                                     args,
+                                     num_templates,
                                      img_transforms=img_transforms)
 
     model = DetectionModel(num_objects=1, num_templates=num_templates)
@@ -61,8 +60,10 @@ def main():
     else:
         device = torch.device('cpu')
 
-    optimizer = optim.SGD(model.learnable_parameters(args.lr), lr=args.lr,
-                          momentum=args.momentum, weight_decay=args.weight_decay)
+    optimizer = optim.SGD(model.learnable_parameters(args.lr),
+                          lr=args.lr,
+                          momentum=args.momentum,
+                          weight_decay=args.weight_decay)
     # optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     if args.resume:
@@ -75,20 +76,28 @@ def main():
 
     scheduler = optim.lr_scheduler.StepLR(optimizer,
                                           step_size=20,
-                                          last_epoch=args.start_epoch-1)
+                                          last_epoch=args.start_epoch - 1)
 
     # train and evalute for `epochs`
     for epoch in range(args.start_epoch, args.epochs):
-        trainer.train(model, loss_fn, optimizer, train_loader, epoch, device=device)
+        trainer.train(model,
+                      loss_fn,
+                      optimizer,
+                      train_loader,
+                      epoch,
+                      device=device)
         scheduler.step()
 
-        if (epoch+1) % args.save_every == 0:
-            trainer.save_checkpoint({
-                'epoch': epoch + 1,
-                'batch_size': train_loader.batch_size,
-                'model': model.state_dict(),
-                'optimizer': optimizer.state_dict()
-            }, filename="checkpoint_{0}.pth".format(epoch+1), save_path=weights_dir)
+        if (epoch + 1) % args.save_every == 0:
+            trainer.save_checkpoint(
+                {
+                    'epoch': epoch + 1,
+                    'batch_size': train_loader.batch_size,
+                    'model': model.state_dict(),
+                    'optimizer': optimizer.state_dict()
+                },
+                filename="checkpoint_{0}.pth".format(epoch + 1),
+                save_path=weights_dir)
 
 
 if __name__ == '__main__':

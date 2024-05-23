@@ -1,4 +1,3 @@
-
 import argparse
 from datetime import datetime
 from pathlib import Path
@@ -22,7 +21,8 @@ def centralize_bbox(bboxes):
     print("Centralize and vectorize")
     hs = bboxes[:, 3] - bboxes[:, 1] + 1
     ws = bboxes[:, 2] - bboxes[:, 0] + 1
-    rects = np.vstack([-(ws-1)/2, -(hs-1)/2, (ws-1)/2, (hs-1)/2]).T
+    rects = np.vstack(
+        [-(ws - 1) / 2, -(hs - 1) / 2, (ws - 1) / 2, (hs - 1) / 2]).T
 
     return rects
 
@@ -32,7 +32,8 @@ def compute_distances(bboxes):
     distances = np.zeros((len(bboxes), len(bboxes)))
     for i in tqdm(range(len(bboxes)), total=len(bboxes)):
         for j in range(len(bboxes)):
-            distances[i, j] = 1 - jaccard_index(bboxes[i, :], bboxes[j, :], (i, j))
+            distances[i, j] = 1 - jaccard_index(bboxes[i, :], bboxes[j, :],
+                                                (i, j))
 
     return distances
 
@@ -47,7 +48,7 @@ def draw_bboxes(clusters):
     d = ImageDraw.Draw(im)
 
     for bbox in clusters['medoids']:
-        box = [(0, 0), (-bbox[0]+bbox[2], -bbox[1]+bbox[3])]
+        box = [(0, 0), (-bbox[0] + bbox[2], -bbox[1] + bbox[3])]
         color = tuple(np.random.choice(range(256), size=3))
         d.rectangle(box, outline=color)
 
@@ -55,7 +56,12 @@ def draw_bboxes(clusters):
     # im.show()
 
 
-def compute_kmedoids(bboxes, cls, option='pyclustering', indices=15, max_clusters=35, max_limit=5000):
+def compute_kmedoids(bboxes,
+                     cls,
+                     option='pyclustering',
+                     indices=15,
+                     max_clusters=35,
+                     max_limit=5000):
     print("Performing clustering using", option)
     clustering = [{} for _ in range(indices)]
 
@@ -63,7 +69,9 @@ def compute_kmedoids(bboxes, cls, option='pyclustering', indices=15, max_cluster
 
     # subsample the number of bounding boxes so that it can fit in memory and is faster
     if bboxes.shape[0] > max_limit:
-        sub_ind = np.random.choice(np.arange(bboxes.shape[0]), size=max_limit, replace=False)
+        sub_ind = np.random.choice(np.arange(bboxes.shape[0]),
+                                   size=max_limit,
+                                   replace=False)
         bboxes = bboxes[sub_ind]
 
     distances_cache = Path('distances_{0}.jbl'.format(cls))
@@ -75,49 +83,69 @@ def compute_kmedoids(bboxes, cls, option='pyclustering', indices=15, max_cluster
         joblib.dump(dist, distances_cache, compress=5)
 
     if option == 'pyclustering':
-        for k in range(indices, max_clusters+1):
+        for k in range(indices, max_clusters + 1):
             print(k, "clusters")
 
-            initial_medoids = np.random.choice(bboxes.shape[0], size=k, replace=False)
+            initial_medoids = np.random.choice(bboxes.shape[0],
+                                               size=k,
+                                               replace=False)
 
-            kmedoids_instance = kmedoids(dist, initial_medoids, ccore=True, data_type='distance_matrix')
+            kmedoids_instance = kmedoids(dist,
+                                         initial_medoids,
+                                         ccore=True,
+                                         data_type='distance_matrix')
 
             print("Running KMedoids")
             t1 = datetime.now()
             kmedoids_instance.process()
             dt = datetime.now() - t1
-            print("Total time taken for clustering {k} medoids: {0}min:{1}s"
-                  .format(dt.seconds // 60, dt.seconds % 60, k=k))
+            print("Total time taken for clustering {k} medoids: {0}min:{1}s".
+                  format(dt.seconds // 60, dt.seconds % 60, k=k))
 
             medoids_idx = kmedoids_instance.get_medoids()
             medoids = bboxes[medoids_idx]
 
-            clustering.append({'n_clusters': k, 'medoids': medoids, 'class': cls})
+            clustering.append({
+                'n_clusters': k,
+                'medoids': medoids,
+                'class': cls
+            })
 
     elif option == 'pyclust':
 
-        for k in range(indices, max_clusters+1):
+        for k in range(indices, max_clusters + 1):
             print(k, "clusters")
-            kmd = KMedoids(n_clusters=k, distance=rect_dist, n_trials=1, max_iter=2)
+            kmd = KMedoids(n_clusters=k,
+                           distance=rect_dist,
+                           n_trials=1,
+                           max_iter=2)
             t1 = datetime.now()
             kmd.fit(bboxes)
             dt = datetime.now() - t1
-            print("Total time taken for clustering {k} medoids: {0}min:{1}s"
-                  .format(dt.seconds//60, dt.seconds % 60, k=k))
+            print("Total time taken for clustering {k} medoids: {0}min:{1}s".
+                  format(dt.seconds // 60, dt.seconds % 60, k=k))
 
             medoids = kmd.centers_
 
-            clustering.append({'n_clusters': k, 'medoids': medoids, 'class': cls})
+            clustering.append({
+                'n_clusters': k,
+                'medoids': medoids,
+                'class': cls
+            })
 
     elif option == 'local':
 
-        for k in range(indices, max_clusters+1):
+        for k in range(indices, max_clusters + 1):
             print(k, "clusters")
             curr_medoids, cluster_idxs = kMedoids(dist, k=k)
             medoids = []
             for m in curr_medoids:
                 medoids.append(bboxes[m, :])
-            clustering.append({'n_clusters': k, 'medoids': medoids, 'class': cls})
+            clustering.append({
+                'n_clusters': k,
+                'medoids': medoids,
+                'class': cls
+            })
 
     return clustering
 
@@ -126,8 +154,14 @@ def arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('dataset_path')
     # 3 is the category ID for cars
-    parser.add_argument('--cls', default=3, type=int, help="Indicate which category of objects we are interested in")
-    parser.add_argument('--clustering', default='pyclustering', choices=('pyclustering', 'pyclust', 'local'))
+    parser.add_argument(
+        '--cls',
+        default=3,
+        type=int,
+        help="Indicate which category of objects we are interested in")
+    parser.add_argument('--clustering',
+                        default='pyclustering',
+                        choices=('pyclustering', 'pyclust', 'local'))
 
     return parser.parse_args()
 
@@ -149,7 +183,6 @@ def arguments():
 #     #
 #     # for i in range(25, 36):
 #     #     draw_bboxes(clusters[i])
-
 
 # if __name__ == "__main__":
 #     main()

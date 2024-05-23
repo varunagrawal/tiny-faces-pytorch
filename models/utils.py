@@ -1,7 +1,14 @@
 import numpy as np
 
 
-def get_bboxes(score_cls, score_reg, prob_cls, templates, prob_thresh, rf, scale=1, refine=True):
+def get_bboxes(score_cls,
+               score_reg,
+               prob_cls,
+               templates,
+               prob_thresh,
+               rf,
+               scale=1,
+               refine=True):
     """
     Convert model output tensor to a set of bounding boxes and their corresponding scores
     """
@@ -13,8 +20,9 @@ def get_bboxes(score_cls, score_reg, prob_cls, templates, prob_thresh, rf, scale
     # templates to evaluate at a single scale aka small scale (Type B templates)
     one_scale_template_ids = np.arange(18, 25)
 
-    ignored_template_ids = np.setdiff1d(np.arange(25), np.concatenate((all_scale_template_ids,
-                                                                       one_scale_template_ids)))
+    ignored_template_ids = np.setdiff1d(
+        np.arange(25),
+        np.concatenate((all_scale_template_ids, one_scale_template_ids)))
 
     template_scales = templates[:, 4]
 
@@ -29,8 +37,8 @@ def get_bboxes(score_cls, score_reg, prob_cls, templates, prob_thresh, rf, scale
         invalid_one_scale_idx = np.where(
             template_scales[one_scale_template_ids] != 1.0)
 
-    invalid_template_id = np.concatenate((ignored_template_ids,
-                                          one_scale_template_ids[invalid_one_scale_idx]))
+    invalid_template_id = np.concatenate(
+        (ignored_template_ids, one_scale_template_ids[invalid_one_scale_idx]))
 
     # zero out prediction from templates that are invalid on this scale
     prob_cls[:, :, invalid_template_id] = 0.0
@@ -53,12 +61,10 @@ def get_bboxes(score_cls, score_reg, prob_cls, templates, prob_thresh, rf, scale
     th = score_reg[:, :, :, 3 * num_templates:4 * num_templates]
 
     if refine:
-        bboxes = regression_refinement(tx, ty, tw, th,
-                                       cx, cy, cw, ch,
-                                       indices)
+        bboxes = regression_refinement(tx, ty, tw, th, cx, cy, cw, ch, indices)
 
     else:
-        bboxes = np.array([cx - cw/2, cy - ch/2, cx + cw/2, cy + ch/2])
+        bboxes = np.array([cx - cw / 2, cy - ch / 2, cx + cw / 2, cy + ch / 2])
 
     # bboxes has a channel dim so we remove that
     bboxes = bboxes[0]
@@ -107,12 +113,12 @@ def balance_sampling(label_cls, pos_fraction, sample_size=256):
     # Find all the points where we have objects and ravel the indices to get a 1D array.
     # This makes the subsequent operations easier to reason about
     pos_idx_unraveled = np.where(label_cls == 1)
-    pos_idx = np.array(np.ravel_multi_index(
-        pos_idx_unraveled, label_cls.shape))
+    pos_idx = np.array(np.ravel_multi_index(pos_idx_unraveled,
+                                            label_cls.shape))
 
     if pos_idx.size > pos_maxnum:
         # Get all the indices of the locations to be zeroed out
-        didx = shuffle_index(pos_idx.size, pos_idx.size-pos_maxnum)
+        didx = shuffle_index(pos_idx.size, pos_idx.size - pos_maxnum)
         # Get the locations and unravel it so we can index
         pos_idx_unraveled = np.unravel_index(pos_idx[didx], label_cls.shape)
         label_cls[pos_idx_unraveled] = 0

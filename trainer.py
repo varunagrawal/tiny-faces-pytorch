@@ -29,7 +29,12 @@ def save_checkpoint(state, filename="checkpoint.pth", save_path="weights"):
     torch.save(state, str(save_path))
 
 
-def visualize_output(img, output, templates, proc, prob_thresh=0.55, nms_thresh=0.1):
+def visualize_output(img,
+                     output,
+                     templates,
+                     proc,
+                     prob_thresh=0.55,
+                     nms_thresh=0.1):
     tensor_to_image = transforms.ToPILImage()
 
     mean = [0.485, 0.456, 0.406]
@@ -39,14 +44,20 @@ def visualize_output(img, output, templates, proc, prob_thresh=0.55, nms_thresh=
 
     image = tensor_to_image(img[0])  # Index into the batch
 
-    cls_map = nnfunc.sigmoid(output[:, 0:templates.shape[0], :, :]).data.cpu(
-    ).numpy().transpose((0, 2, 3, 1))[0, :, :, :]
-    reg_map = output[:, templates.shape[0]:, :, :].data.cpu(
-    ).numpy().transpose((0, 2, 3, 1))[0, :, :, :]
+    cls_map = nnfunc.sigmoid(
+        output[:, 0:templates.shape[0], :, :]).data.cpu().numpy().transpose(
+            (0, 2, 3, 1))[0, :, :, :]
+    reg_map = output[:,
+                     templates.shape[0]:, :, :].data.cpu().numpy().transpose(
+                         (0, 2, 3, 1))[0, :, :, :]
 
     print(np.sort(np.unique(cls_map))[::-1])
-    proc.visualize_heatmaps(image, cls_map, reg_map, templates,
-                            prob_thresh=prob_thresh, nms_thresh=nms_thresh)
+    proc.visualize_heatmaps(image,
+                            cls_map,
+                            reg_map,
+                            templates,
+                            prob_thresh=prob_thresh,
+                            nms_thresh=nms_thresh)
 
     p = input("Continue? [Yn]")
     if p.lower().strip() == 'n':
@@ -68,8 +79,7 @@ def train(model, loss_fn, optimizer, dataloader, epoch, device):
         regression_map_var = regression_map.float().to(device)
 
         output = model(x)
-        loss = loss_fn(output,
-                       class_map_var, regression_map_var)
+        loss = loss_fn(output, class_map_var, regression_map_var)
 
         # visualize_output(img, output, dataloader.dataset.templates)
 
@@ -79,13 +89,19 @@ def train(model, loss_fn, optimizer, dataloader, epoch, device):
         loss.backward()
         optimizer.step()
 
-        print_state(idx, epoch, len(dataloader),
-                    loss_fn.class_average.average,
+        print_state(idx, epoch, len(dataloader), loss_fn.class_average.average,
                     loss_fn.reg_average.average)
 
 
-def get_detections(model, img, templates, rf, img_transforms,
-                   prob_thresh=0.65, nms_thresh=0.3, scales=(-2, -1, 0, 1), device=None):
+def get_detections(model,
+                   img,
+                   templates,
+                   rf,
+                   img_transforms,
+                   prob_thresh=0.65,
+                   nms_thresh=0.3,
+                   scales=(-2, -1, 0, 1),
+                   device=None):
     model = model.to(device)
     model.eval()
 
@@ -94,7 +110,7 @@ def get_detections(model, img, templates, rf, img_transforms,
     num_templates = templates.shape[0]
 
     # Evaluate over multiple scale
-    scales_list = [2 ** x for x in scales]
+    scales_list = [2**x for x in scales]
 
     # convert tensor to PIL image so we can perform resizing
     image = transforms.functional.to_pil_image(img[0])
@@ -104,7 +120,7 @@ def get_detections(model, img, templates, rf, img_transforms,
     for scale in scales_list:
         # scale the images
         scaled_image = transforms.functional.resize(image,
-                                                    np.int(min_side*scale))
+                                                    np.int(min_side * scale))
 
         # normalize the images
         img = img_transforms(scaled_image)

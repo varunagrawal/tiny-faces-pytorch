@@ -1,12 +1,11 @@
 import numpy as np
 from copy import deepcopy
 
-from utils.visualize import draw_bounding_box, render_and_save_bboxes, visualize_bboxes
+from utils.visualize import draw_bounding_box
 from utils.nms import nms
 from utils.metrics import rect_dist
 from utils.dense_overlap import compute_dense_overlap
 import logging
-
 
 logger = logging.getLogger("detector")
 
@@ -19,8 +18,15 @@ class DataProcessor:
     The idea is that this can act as a mixin that enables torch dataloaders with the heatmap
     generation semantics.
     """
-    def __init__(self, input_size, heatmap_size, pos_thresh, neg_thresh, templates,
-                 img_means=None, rf=None):
+
+    def __init__(self,
+                 input_size,
+                 heatmap_size,
+                 pos_thresh,
+                 neg_thresh,
+                 templates,
+                 img_means=None,
+                 rf=None):
         self.input_size = input_size
         self.heatmap_size = heatmap_size
         self.pos_thresh = pos_thresh
@@ -38,8 +44,10 @@ class DataProcessor:
         """
         # randomly pick a cropping window for the image
         # We keep the second arg to randint at least 1 since randint is [low, high)
-        crop_x1 = np.random.randint(0, np.max([1, (img.shape[1] - self.input_size[1] + 1)]))
-        crop_y1 = np.random.randint(0, np.max([1, (img.shape[0] - self.input_size[0] + 1)]))
+        max_crop_x = np.max([1, (img.shape[1] - self.input_size[1] + 1)])
+        max_crop_y = np.max([1, (img.shape[0] - self.input_size[0] + 1)])
+        crop_x1 = np.random.randint(0, max_crop_x)
+        crop_y1 = np.random.randint(0, max_crop_y)
         crop_x2 = min(img.shape[1], crop_x1 + self.input_size[1])
         crop_y2 = min(img.shape[0], crop_y1 + self.input_size[0])
         crop_h = crop_y2 - crop_y1
@@ -54,7 +62,7 @@ class DataProcessor:
 
         # set this to average image colors
         # this will later be subtracted in mean image subtraction
-        img_buf = np.zeros((self.input_size + (3,)))
+        img_buf = np.zeros((self.input_size + (3, )))
 
         # add the average image so it gets subtracted later.
         for i, c in enumerate(self.img_means):
@@ -62,7 +70,8 @@ class DataProcessor:
         # img is a int8 array, so we need to scale the values accordingly
         img_buf = (img_buf * 255).astype(np.int8)
 
-        img_buf[paste_box[1]:paste_box[3], paste_box[0]:paste_box[2], :] = img[crop_y1:crop_y2, crop_x1:crop_x2, :]
+        img_buf[paste_box[1]:paste_box[3], paste_box[0]:paste_box[2], :] = \
+            img[crop_y1:crop_y2, crop_x1:crop_x2, :]
 
         if bboxes.shape[0] > 0:
             # check if overlap is above negative threshold
@@ -81,14 +90,19 @@ class DataProcessor:
             bboxes[:, 3] = bboxes[:, 3] - crop_y1 + paste_box[1]
 
             # correct for bbox to be within image border
-            bboxes[:, 0] = np.minimum(self.input_size[1], np.maximum(0, bboxes[:, 0]))
-            bboxes[:, 1] = np.minimum(self.input_size[0], np.maximum(0, bboxes[:, 1]))
-            bboxes[:, 2] = np.minimum(self.input_size[1], np.maximum(1, bboxes[:, 2]))
-            bboxes[:, 3] = np.minimum(self.input_size[0], np.maximum(1, bboxes[:, 3]))
+            bboxes[:, 0] = np.minimum(self.input_size[1],
+                                      np.maximum(0, bboxes[:, 0]))
+            bboxes[:, 1] = np.minimum(self.input_size[0],
+                                      np.maximum(0, bboxes[:, 1]))
+            bboxes[:, 2] = np.minimum(self.input_size[1],
+                                      np.maximum(1, bboxes[:, 2]))
+            bboxes[:, 3] = np.minimum(self.input_size[0],
+                                      np.maximum(1, bboxes[:, 3]))
 
             # check to see if the adjusted bounding box is invalid
-            invalid = np.logical_or(np.logical_or(bboxes[:, 2] <= bboxes[:, 0], bboxes[:, 3] <= bboxes[:, 1]),
-                                    overlap < self.neg_thresh)
+            invalid = np.logical_or(
+                np.logical_or(bboxes[:, 2] <= bboxes[:, 0], bboxes[:, 3] <= bboxes[:, 1]), \
+                        overlap < self.neg_thresh)
 
             # remove invalid bounding boxes
             ind = np.where(invalid)
@@ -114,12 +128,14 @@ class DataProcessor:
         dx2 = self.templates[:, 2]
         dy2 = self.templates[:, 3]
 
+        # yapf: disable
         # compute the bounds
         # We add new axes so that the arrays are numpy broadcasting compatible
         coarse_xx1 = coarse_x[:, :, np.newaxis] + dx1[np.newaxis, np.newaxis, :]  # (vsy, vsx, nt)
         coarse_yy1 = coarse_y[:, :, np.newaxis] + dy1[np.newaxis, np.newaxis, :]  # (vsy, vsx, nt)
         coarse_xx2 = coarse_x[:, :, np.newaxis] + dx2[np.newaxis, np.newaxis, :]  # (vsy, vsx, nt)
         coarse_yy2 = coarse_y[:, :, np.newaxis] + dy2[np.newaxis, np.newaxis, :]  # (vsy, vsx, nt)
+        # yapf: enable
 
         # Matlab code indexes from 1 hence to check against it, we need to add +1
         # However, in python we don't need the +1 during actual training
@@ -150,7 +166,8 @@ class DataProcessor:
         dx1, dy1, dx2, dy2 = cluster_boxes
 
         # We reshape to take advantage of numpy broadcasting
-        fxx1 = bboxes[:, 0].reshape(1, 1, 1, bboxes.shape[0])  # (1, 1, 1, bboxes)
+        fxx1 = bboxes[:, 0].reshape(1, 1, 1,
+                                    bboxes.shape[0])  # (1, 1, 1, bboxes)
         fyy1 = bboxes[:, 1].reshape(1, 1, 1, bboxes.shape[0])
         fxx2 = bboxes[:, 2].reshape(1, 1, 1, bboxes.shape[0])
         fyy2 = bboxes[:, 3].reshape(1, 1, 1, bboxes.shape[0])
@@ -207,7 +224,9 @@ class DataProcessor:
         dy1, dy2 = self.templates[:, 1], self.templates[:, 3]
 
         # Filter out invalid bbox
-        invalid = np.logical_or(bboxes[:, 2] <= bboxes[:, 0], bboxes[:, 3] <= bboxes[:, 1])
+        invalid_x = bboxes[:, 2] <= bboxes[:, 0]
+        invalid_y = bboxes[:, 3] <= bboxes[:, 1]
+        invalid = np.logical_or(invalid_x, invalid_y)
         ind = np.where(invalid)
         bboxes = np.delete(bboxes, ind, axis=0)
 
@@ -215,14 +234,16 @@ class DataProcessor:
         iou = np.zeros((vsy, vsx, self.templates.shape[0], bboxes.shape[0]))
 
         if ng > 0:
-            gx1, gy1, gx2, gy2 = bboxes[:, 0], bboxes[:, 1], bboxes[:, 2], bboxes[:, 3]
+            gx1 = bboxes[:, 0]
+            gy1 = bboxes[:, 1]
+            gx2 = bboxes[:, 2]
+            gy2 = bboxes[:, 3]
 
-            iou = compute_dense_overlap(ofx, ofy, stx, sty, vsx, vsy,
-                                        dx1, dy1, dx2, dy2,
-                                        gx1, gy1, gx2, gy2,
-                                        1, 1)
+            iou = compute_dense_overlap(ofx, ofy, stx, sty, vsx, vsy, dx1, dy1,
+                                        dx2, dy2, gx1, gy1, gx2, gy2, 1, 1)
 
-            regress_maps, iou = self.get_regression(bboxes, [dx1, dy1, dx2, dy2], iou)
+            regress_maps, iou = self.get_regression(bboxes,
+                                                    [dx1, dy1, dx2, dy2], iou)
 
             best_iou = iou.max(axis=3)
 
@@ -230,16 +251,21 @@ class DataProcessor:
             per_object_iou = np.reshape(iou, (-1, ng))
             fbest_idx = np.argmax(per_object_iou, axis=0)
             iou_ = np.amax(per_object_iou, axis=0)
-            fbest_idx = np.unravel_index(fbest_idx[iou_ > self.neg_thresh], iou.shape[:-1])
+            fbest_idx = np.unravel_index(fbest_idx[iou_ > self.neg_thresh],
+                                         iou.shape[:-1])
             class_maps[fbest_idx] = 1
 
             # Assign positive labels
-            class_maps = np.maximum(class_maps, (best_iou >= self.pos_thresh)*2-1)
+            class_maps = np.maximum(class_maps,
+                                    (best_iou >= self.pos_thresh) * 2 - 1)
 
             # If between positive and negative, assign as gray area
             gray = -np.ones(class_maps.shape)
-            gray[np.bitwise_and(self.neg_thresh <= best_iou, best_iou < self.pos_thresh)] = 0
-            class_maps = np.maximum(class_maps, gray)  # since we set the max IoU values to 1
+            gray_mask = np.bitwise_and(self.neg_thresh <= best_iou, best_iou
+                                       < self.pos_thresh)
+            gray[gray_mask] = 0
+            # since we set the max IoU values to 1
+            class_maps = np.maximum(class_maps, gray)
 
         # handle the boundary
         non_neg_border = np.bitwise_and(pad_mask, class_maps != -1)
@@ -249,18 +275,20 @@ class DataProcessor:
         # Return heatmaps
         return class_maps, regress_maps, iou
 
-    def visualize_heatmaps(self, img, cls_map, reg_map, templates, prob_thresh=1, nms_thresh=1, iou=None):
+    def visualize_heatmaps(self,
+                           img,
+                           cls_map,
+                           reg_map,
+                           templates,
+                           prob_thresh=1,
+                           nms_thresh=1,
+                           iou=None):
         """
         Expect cls_map and reg_map to be of the form HxWxC
         """
         fy, fx, fc = np.where(cls_map >= prob_thresh)
 
-        # print(iou.shape)
-        # best_iou = iou.max(axis=3)
-        # print(best_iou.shape)
-        # fy, fx, fc = np.where(best_iou >= 0.5)  # neg thresh
-
-        cy, cx = fy*self.sty + self.ofy, fx*self.stx + self.ofx
+        cy, cx = fy * self.sty + self.ofy, fx * self.stx + self.ofx
         cw = templates[fc, 2] - templates[fc, 0]
         ch = templates[fc, 3] - templates[fc, 1]
 
@@ -268,10 +296,10 @@ class DataProcessor:
         num_templates = templates.shape[0]
 
         # refine bounding box
-        tx = reg_map[:, :, 0*num_templates:1*num_templates]
-        ty = reg_map[:, :, 1*num_templates:2*num_templates]
-        tw = reg_map[:, :, 2*num_templates:3*num_templates]
-        th = reg_map[:, :, 3*num_templates:4*num_templates]
+        tx = reg_map[:, :, 0 * num_templates:1 * num_templates]
+        ty = reg_map[:, :, 1 * num_templates:2 * num_templates]
+        tw = reg_map[:, :, 2 * num_templates:3 * num_templates]
+        th = reg_map[:, :, 3 * num_templates:4 * num_templates]
 
         dcx = cw * tx[fy, fx, fc]
         dcy = ch * ty[fy, fx, fc]
@@ -282,7 +310,10 @@ class DataProcessor:
         rw = cw * np.exp(tw[fy, fx, fc])
         rh = ch * np.exp(th[fy, fx, fc])
 
-        bboxes = np.array([np.abs(rx-rw/2), np.abs(ry-rh/2), rx+rw/2, ry+rh/2]).T
+        bboxes = np.array([
+            np.abs(rx - rw / 2),
+            np.abs(ry - rh / 2), rx + rw / 2, ry + rh / 2
+        ]).T
 
         scores = cls_map[fy, fx, fc]
 

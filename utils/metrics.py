@@ -68,7 +68,8 @@ def rect_dist(I, J):
     iou[np.isnan(iou)] = 0
     iou[np.isinf(iou)] = 0
 
-    dist = np.maximum(np.zeros(iou.shape), np.minimum(np.ones(iou.shape), 1 - iou))
+    dist = np.maximum(np.zeros(iou.shape),
+                      np.minimum(np.ones(iou.shape), 1 - iou))
 
     return dist
 
@@ -96,7 +97,12 @@ def voc_ap(rec, prec, use_07_metric=False):
     return ap
 
 
-def average_precision(confidence, dets, image_ids, class_recs, npos, ovthresh=0.5):
+def average_precision(confidence,
+                      dets,
+                      image_ids,
+                      class_recs,
+                      npos,
+                      ovthresh=0.5):
     sorted_ind = np.argsort(-confidence)
     sorted_scores = np.sort(-confidence)
     BB = dets[sorted_ind, :]
@@ -143,7 +149,6 @@ def average_precision(confidence, dets, image_ids, class_recs, npos, ovthresh=0.
         else:
             fp[d] = 1.
 
-
     # compute precision recall
     fp = np.cumsum(fp)
     tp = np.cumsum(tp)
@@ -169,12 +174,10 @@ def compute_model_score(pred_file, gt_file, class_id=3):
         # get the list of all bboxes belonging to the particular class
         R = [obj for obj in recs[img_id] if obj["category_id"] == class_id]
         bboxes = np.array([x["bbox"] for x in R])
-        det = [False] * len(R)  # to record if this object has already been recorded
+        det = [False] * len(
+            R)  # to record if this object has already been recorded
         npos = npos + len(R)
-        class_recs[img_id] = {
-            'bbox': bboxes,
-            'det': det
-        }
+        class_recs[img_id] = {'bbox': bboxes, 'det': det}
 
     print("Loaded GT")
 
@@ -187,7 +190,7 @@ def compute_model_score(pred_file, gt_file, class_id=3):
     for x in tqdm(preds, total=len(preds)):
         confidence.extend(x["confidences"])
         BB.extend(x["bboxes"])
-        image_ids.extend([x["id"]]*len(x['confidences']))
+        image_ids.extend([x["id"]] * len(x['confidences']))
 
     print("Loaded detections")
 
@@ -197,5 +200,6 @@ def compute_model_score(pred_file, gt_file, class_id=3):
     print(confidence.shape)
     print(BB.shape)
 
-    ap, prec, rec = average_precision(confidence, BB, image_ids, class_recs, npos)
+    ap, prec, rec = average_precision(confidence, BB, image_ids, class_recs,
+                                      npos)
     return ap, prec, rec

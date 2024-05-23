@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.io import loadmat
-from .metrics import jaccard_index, rect_dist
+from .metrics import rect_dist
 
 
 def test_rect_dist(x, y, gt_dist):

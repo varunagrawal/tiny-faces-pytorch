@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch import nn
-from torchvision.models import resnet50, resnet101
+from torchvision.models import resnet101
 
 
 class DetectionModel(nn.Module):
@@ -12,19 +12,27 @@ class DetectionModel(nn.Module):
     def __init__(self, base_model=resnet101, num_templates=1, num_objects=1):
         super().__init__()
         # 4 is for the bounding box offsets
-        output = (num_objects + 4)*num_templates
+        output = (num_objects + 4) * num_templates
         self.model = base_model(pretrained=True)
 
         # delete unneeded layer
         del self.model.layer4
 
-        self.score_res3 = nn.Conv2d(in_channels=512, out_channels=output,
-                                    kernel_size=1, padding=0)
-        self.score_res4 = nn.Conv2d(in_channels=1024, out_channels=output,
-                                    kernel_size=1, padding=0)
+        self.score_res3 = nn.Conv2d(in_channels=512,
+                                    out_channels=output,
+                                    kernel_size=1,
+                                    padding=0)
+        self.score_res4 = nn.Conv2d(in_channels=1024,
+                                    out_channels=output,
+                                    kernel_size=1,
+                                    padding=0)
 
-        self.score4_upsample = nn.ConvTranspose2d(in_channels=output, out_channels=output,
-                                                  kernel_size=4, stride=2, padding=1, bias=False)
+        self.score4_upsample = nn.ConvTranspose2d(in_channels=output,
+                                                  out_channels=output,
+                                                  kernel_size=4,
+                                                  stride=2,
+                                                  padding=1,
+                                                  bias=False)
         self._init_bilinear()
 
     def _init_weights(self):
@@ -36,7 +44,7 @@ class DetectionModel(nn.Module):
         :return:
         """
         k = self.score4_upsample.kernel_size[0]
-        factor = np.floor((k+1)/2)
+        factor = np.floor((k + 1) / 2)
         if k % 2 == 1:
             center = factor
         else:
@@ -55,10 +63,22 @@ class DetectionModel(nn.Module):
     def learnable_parameters(self, lr):
         parameters = [
             # Be T'Challa. Don't freeze.
-            {'params': self.model.parameters(), 'lr': lr},
-            {'params': self.score_res3.parameters(), 'lr': 0.1*lr},
-            {'params': self.score_res4.parameters(), 'lr': 1*lr},
-            {'params': self.score4_upsample.parameters(), 'lr': 0}  # freeze UpConv layer
+            {
+                'params': self.model.parameters(),
+                'lr': lr
+            },
+            {
+                'params': self.score_res3.parameters(),
+                'lr': 0.1 * lr
+            },
+            {
+                'params': self.score_res4.parameters(),
+                'lr': 1 * lr
+            },
+            {
+                'params': self.score4_upsample.parameters(),
+                'lr': 0
+            }  # freeze UpConv layer
         ]
         return parameters
 

@@ -1,6 +1,5 @@
-from PIL import Image, ImageDraw, ImageFont
-import json
-from pathlib import Path
+from PIL import ImageDraw, ImageFont
+
 import numpy as np
 
 
@@ -14,7 +13,9 @@ def draw_bounding_box(img, bbox, labels):
     for i, k in enumerate(labels.keys()):
         w, h = font.getsize(labels[k])
         # draw.rectangle((bbox[0], bbox[1] + i*h, bbox[0] + w, bbox[1] + (i+2)*h), fill=color)
-        draw.text((bbox[0], bbox[1] + i*h), "{0}:{1:.3} ".format(k, labels[k]), fill=color)
+        draw.text((bbox[0], bbox[1] + i * h),
+                  "{0}:{1:.3} ".format(k, labels[k]),
+                  fill=color)
 
     return img
 
@@ -41,7 +42,13 @@ def visualize_bboxes(image, bboxes):
 
     image.show(title="BBoxes")
 
-def render_and_save_bboxes(image, image_id, bboxes, scores, scales, directory="qualitative"):
+
+def render_and_save_bboxes(image,
+                           image_id,
+                           bboxes,
+                           scores,
+                           scales,
+                           directory="qualitative"):
     """
     Render the bboxes on the image and save the image
     :param image: PIL image
@@ -54,6 +61,9 @@ def render_and_save_bboxes(image, image_id, bboxes, scores, scales, directory="q
     """
     for idx, bbox in enumerate(bboxes):
         bbox = np.round(np.array(bbox))
-        image = draw_bounding_box(image, bbox, {'score': scores[idx], 'scale': scales[idx]})
+        image = draw_bounding_box(image, bbox, {
+            'score': scores[idx],
+            'scale': scales[idx]
+        })
 
     image.save("{0}/{1}.jpg".format(directory, image_id))
