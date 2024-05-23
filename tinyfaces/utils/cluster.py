@@ -9,8 +9,8 @@ from pyclust import KMedoids
 from pyclustering.cluster.kmedoids import kmedoids
 from tqdm import tqdm
 
-from .k_medoids import kMedoids
-from .metrics import jaccard_index, rect_dist
+from tinyfaces.utils.k_medoids import kMedoids
+from tinyfaces.utils.metrics import jaccard_index, rect_dist
 
 
 def centralize_bbox(bboxes):

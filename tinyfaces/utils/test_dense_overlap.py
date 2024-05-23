@@ -1,6 +1,7 @@
-from .dense_overlap import compute_dense_overlap
-from scipy.io import loadmat
 import numpy as np
+from scipy.io import loadmat
+
+from tinyfaces.utils.dense_overlap import compute_dense_overlap
 
 d = loadmat("dense_overlap.mat")
 

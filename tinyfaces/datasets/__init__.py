@@ -3,6 +3,9 @@ import os.path as osp
 
 import numpy as np
 from torch.utils import data
+from utils.cluster import compute_kmedoids
+
+from tinyfaces.datasets.wider_face import WIDERFace
 
 from utils.cluster import compute_kmedoids
 

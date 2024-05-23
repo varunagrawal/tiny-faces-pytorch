@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.io import loadmat
-from .metrics import rect_dist
+
+from tinyfaces.utils.metrics import rect_dist
 
 
 def test_rect_dist(x, y, gt_dist):

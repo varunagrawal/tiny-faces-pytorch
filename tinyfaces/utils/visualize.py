@@ -1,6 +1,5 @@
-from PIL import ImageDraw, ImageFont
-
 import numpy as np
+from PIL import ImageDraw, ImageFont
 
 
 def draw_bounding_box(img, bbox, labels):

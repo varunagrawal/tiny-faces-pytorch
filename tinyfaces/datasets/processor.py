@@ -3,10 +3,10 @@ from copy import deepcopy
 
 import numpy as np
 
-from utils.dense_overlap import compute_dense_overlap
-from utils.metrics import rect_dist
-from utils.nms import nms
-from utils.visualize import draw_bounding_box
+from tinyfaces.utils.dense_overlap import compute_dense_overlap
+from tinyfaces.utils.metrics import rect_dist
+from tinyfaces.utils.nms import nms
+from tinyfaces.utils.visualize import draw_bounding_box
 
 logger = logging.getLogger("detector")
 
