@@ -7,10 +7,6 @@ from torch.utils import data
 from tinyfaces.clustering.cluster import compute_kmedoids
 from tinyfaces.datasets.wider_face import WIDERFace
 
-from utils.cluster import compute_kmedoids
-
-from .wider_face import WIDERFace
-
 
 def get_dataloader(datapath,
                    args,
