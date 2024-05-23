@@ -1,3 +1,3 @@
 """Utils module"""
 
-from tinyfaces.utils import dense_overlap, k_medoids, metrics, nms
+from tinyfaces.utils import k_medoids, nms

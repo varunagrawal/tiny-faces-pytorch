@@ -3,8 +3,8 @@ from copy import deepcopy
 
 import numpy as np
 
-from tinyfaces.utils.dense_overlap import compute_dense_overlap
-from tinyfaces.utils.metrics import rect_dist
+from tinyfaces.datasets.dense_overlap import compute_dense_overlap
+from tinyfaces.metrics import rect_dist
 from tinyfaces.utils.nms import nms
 from tinyfaces.utils.visualize import draw_bounding_box
 
