@@ -15,7 +15,7 @@ resume:
 	$(PYTHON) main.py $(TRAINDATA) $(VALDATA) --dataset-root $(ROOT) --resume $(CHECKPOINT) --epochs $(EPOCH)
 
 evaluate: 
-	$(PYTHON) evaluate.py $(VALDATA) --dataset-root $(ROOT) --checkpoint $(CHECKPOINT) --split val
+	$(PYTHON) evaluate_model.py $(VALDATA) --dataset-root $(ROOT) --checkpoint $(CHECKPOINT) --split val
 
 evaluation:
 	cd eval_tools/ && octave wider_eval.m
