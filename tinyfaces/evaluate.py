@@ -1,5 +1,4 @@
-import os
-import os.path as osp
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -86,14 +85,16 @@ def get_detections(model,
 
 def write_results(dets, img_path, split, results_dir=None):
     results_dir = results_dir or "{0}_results".format(split)
+    results_dir = Path(results_dir)
 
-    if not osp.exists(results_dir):
-        os.makedirs(results_dir)
+    if not results_dir.exists():
+        results_dir.mkdir()
 
-    filename = osp.join(results_dir, img_path.replace('jpg', 'txt'))
-    file_dir = os.path.dirname(filename)
-    if not osp.exists(file_dir):
-        os.makedirs(file_dir)
+    filename = results_dir / img_path.replace('jpg', 'txt')
+
+    file_dir = filename.parent
+    if not file_dir.exists():
+        file_dir.mkdir()
 
     with open(filename, 'w') as f:
         f.write(img_path.split('/')[-1] + "\n")
