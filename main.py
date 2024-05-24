@@ -6,10 +6,10 @@ import torch
 from torch import optim
 from torchvision import transforms
 
-import trainer
-from datasets import get_dataloader
-from models.loss import DetectionCriterion
-from models.model import DetectionModel
+from tinyfaces import trainer
+from tinyfaces.datasets import get_dataloader
+from tinyfaces.models.loss import DetectionCriterion
+from tinyfaces.models.model import DetectionModel
 
 
 def arguments():

@@ -1,16 +1,14 @@
-import argparse
 from datetime import datetime
 from pathlib import Path
 
 import joblib
 import numpy as np
-from PIL import Image, ImageDraw
 from pyclust import KMedoids
 from pyclustering.cluster.kmedoids import kmedoids
 from tqdm import tqdm
 
-from .k_medoids import kMedoids
-from .metrics import jaccard_index, rect_dist
+from tinyfaces.clustering.k_medoids import kMedoids
+from tinyfaces.metrics import jaccard_index, rect_dist
 
 
 def centralize_bbox(bboxes):
@@ -36,24 +34,6 @@ def compute_distances(bboxes):
                                                 (i, j))
 
     return distances
-
-
-def draw_bboxes(clusters):
-    """
-    Draw and save the clustered bounding boxes for inspection
-    :param clusters:
-    :return:
-    """
-    im = Image.new('RGB', [512, 512])
-    d = ImageDraw.Draw(im)
-
-    for bbox in clusters['medoids']:
-        box = [(0, 0), (-bbox[0] + bbox[2], -bbox[1] + bbox[3])]
-        color = tuple(np.random.choice(range(256), size=3))
-        d.rectangle(box, outline=color)
-
-    im.save("canonical_bbox_clusters_{0}.jpg".format(len(clusters['medoids'])))
-    # im.show()
 
 
 def compute_kmedoids(bboxes,
@@ -148,41 +128,3 @@ def compute_kmedoids(bboxes,
             })
 
     return clustering
-
-
-def arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('dataset_path')
-    # 3 is the category ID for cars
-    parser.add_argument(
-        '--cls',
-        default=3,
-        type=int,
-        help="Indicate which category of objects we are interested in")
-    parser.add_argument('--clustering',
-                        default='pyclustering',
-                        choices=('pyclustering', 'pyclust', 'local'))
-
-    return parser.parse_args()
-
-
-# def main():
-#     args = arguments()
-#
-#     bboxes = get_class_data(cls=args.cls, dataset_path=args.dataset_path)
-#
-#     clustering = compute_kmedoids(bboxes, args.cls, option=args.clustering)
-#
-#     cluster_file = Path(args.dataset_path, 'clustering.jbl')
-#
-#     joblib.dump(clustering, cluster_file, compress=5)
-#
-#     ## For visualization
-#     # clusters = joblib.load('clustering.jbl')
-#     # draw_bboxes(clusters[25])
-#     #
-#     # for i in range(25, 36):
-#     #     draw_bboxes(clusters[i])
-
-# if __name__ == "__main__":
-#     main()

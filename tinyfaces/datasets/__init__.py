@@ -1,12 +1,11 @@
 import json
-import os.path as osp
+from pathlib import Path
 
 import numpy as np
 from torch.utils import data
 
-from utils.cluster import compute_kmedoids
-
-from .wider_face import WIDERFace
+from tinyfaces.clustering.cluster import compute_kmedoids
+from tinyfaces.datasets.wider_face import WIDERFace
 
 
 def get_dataloader(datapath,
@@ -16,14 +15,14 @@ def get_dataloader(datapath,
                    img_transforms=None,
                    train=True,
                    split="train"):
-    template_file = osp.join("datasets", template_file)
+    template_file = Path(__file__).parent / template_file
 
-    if osp.exists(template_file):
+    if template_file.exists():
         templates = json.load(open(template_file))
 
     else:
         # Cluster the bounding boxes to get the templates
-        dataset = WIDERFace(osp.expanduser(args.traindata), [])
+        dataset = WIDERFace(Path(args.traindata).expanduser(), [])
         clustering = compute_kmedoids(dataset.get_all_bboxes(),
                                       1,
                                       indices=num_templates,
@@ -38,13 +37,13 @@ def get_dataloader(datapath,
 
     templates = np.round(np.array(templates), decimals=8)
 
-    data_loader = data.DataLoader(WIDERFace(osp.expanduser(datapath),
-                                            templates,
-                                            split=split,
-                                            img_transforms=img_transforms,
-                                            dataset_root=osp.expanduser(
-                                                args.dataset_root),
-                                            debug=args.debug),
+    dataset = WIDERFace(Path(datapath).expanduser(),
+                        templates,
+                        split=split,
+                        img_transforms=img_transforms,
+                        dataset_root=Path(args.dataset_root).expanduser(),
+                        debug=args.debug)
+    data_loader = data.DataLoader(dataset,
                                   batch_size=args.batch_size,
                                   shuffle=train,
                                   num_workers=args.workers,

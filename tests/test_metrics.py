@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.io import loadmat
-from .metrics import rect_dist
+
+from tinyfaces.metrics import rect_dist
 
 
 def test_rect_dist(x, y, gt_dist):
@@ -9,6 +10,7 @@ def test_rect_dist(x, y, gt_dist):
 
 
 def main():
+    #TODO Generate rect_dist.mat file from Matlab
     truth = loadmat('rect_dist.mat')
     gt_dist = truth['d'][:, 0]
     x = truth['labelRect']

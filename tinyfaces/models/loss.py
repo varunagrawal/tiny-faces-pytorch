@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from .utils import balance_sampling
+from tinyfaces.models.utils import balance_sampling
 
 
 class AvgMeter:

@@ -1,7 +1,9 @@
-from .dense_overlap import compute_dense_overlap
-from scipy.io import loadmat
 import numpy as np
+from scipy.io import loadmat
 
+from tinyfaces.datasets.dense_overlap import compute_dense_overlap
+
+#TODO Use Peiyun's Matlab code to generate a dense_overlap.mat file
 d = loadmat("dense_overlap.mat")
 
 ofx, ofy = d['ofx'][0, 0], d['ofy'][0, 0]

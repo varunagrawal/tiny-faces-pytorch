@@ -6,9 +6,8 @@ from PIL import Image
 from torch.utils.data import dataset
 from torchvision import transforms
 
-from utils import visualize
-
-from .processor import DataProcessor
+from tinyfaces.datasets.processor import DataProcessor
+from tinyfaces.utils import visualize
 
 
 class WIDERFace(dataset.Dataset):

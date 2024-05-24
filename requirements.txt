@@ -1,9 +1,0 @@
-numpy>=1.26.4
-scipy>=1.12.0
-Pillow>=10.3.0
-pyclust==0.2.0
-pyclustering==0.10.1.2
-torch==2.3.0
-torchvision==0.18.0
-tqdm==4.66.2
-treelib>=1.7.0
