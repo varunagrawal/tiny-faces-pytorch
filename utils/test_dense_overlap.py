@@ -2,7 +2,6 @@ from .dense_overlap import compute_dense_overlap
 from scipy.io import loadmat
 import numpy as np
 
-
 d = loadmat("dense_overlap.mat")
 
 ofx, ofy = d['ofx'][0, 0], d['ofy'][0, 0]
@@ -22,10 +21,8 @@ gy2 = gy2.reshape(gy2.shape[0])
 
 correct_iou = d['iou']
 
-iou = compute_dense_overlap(ofx, ofy, stx, sty, vsx, vsy,
-                            dx1, dy1, dx2, dy2,
-                            gx1, gy1, gx2, gy2,
-                            1, 1)
+iou = compute_dense_overlap(ofx, ofy, stx, sty, vsx, vsy, dx1, dy1, dx2, dy2,
+                            gx1, gy1, gx2, gy2, 1, 1)
 
 print("Computed IOU")
 print("iou shape", iou.shape)

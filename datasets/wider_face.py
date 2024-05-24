@@ -16,9 +16,18 @@ class WIDERFace(dataset.Dataset):
     so a lot of small housekeeping elements have been added
     to take care of the indexing discrepancies."""
 
-    def __init__(self, path, templates, img_transforms=None, dataset_root="", split="train",
-                 train=True, input_size=(500, 500), heatmap_size=(63, 63),
-                 pos_thresh=0.7, neg_thresh=0.3, pos_fraction=0.5, debug=False):
+    def __init__(self,
+                 path,
+                 templates,
+                 img_transforms=None,
+                 dataset_root="",
+                 split="train",
+                 input_size=(500, 500),
+                 heatmap_size=(63, 63),
+                 pos_thresh=0.7,
+                 neg_thresh=0.3,
+                 pos_fraction=0.5,
+                 debug=False):
         super().__init__()
 
         self.data = []
@@ -29,7 +38,6 @@ class WIDERFace(dataset.Dataset):
         print("Dataset loaded")
         print("{0} samples in the {1} dataset".format(len(self.data),
                                                       self.split))
-        # self.data = data
 
         # canonical object templates obtained via clustering
         # NOTE we directly use the values from Peiyun's repository stored in "templates.json"
@@ -45,15 +53,14 @@ class WIDERFace(dataset.Dataset):
 
         # receptive field computed using a combination of values from Matconvnet
         # plus derived equations.
-        self.rf = {
-            'size': [859, 859],
-            'stride': [8, 8],
-            'offset': [-1, -1]
-        }
+        self.rf = {'size': [859, 859], 'stride': [8, 8], 'offset': [-1, -1]}
 
-        self.processor = DataProcessor(input_size, heatmap_size,
-                                       pos_thresh, neg_thresh,
-                                       templates, rf=self.rf)
+        self.processor = DataProcessor(input_size,
+                                       heatmap_size,
+                                       pos_thresh,
+                                       neg_thresh,
+                                       templates,
+                                       rf=self.rf)
         self.debug = debug
 
     def load(self, path):
@@ -76,13 +83,14 @@ class WIDERFace(dataset.Dataset):
                     idx += 1
                 else:
                     for b in range(n):
-                        bboxes[b, :] = [abs(float(x))
-                                        for x in lines[idx].strip().split()]
+                        bboxes[b, :] = [
+                            abs(float(x)) for x in lines[idx].strip().split()
+                        ]
                         idx += 1
 
                 # remove invalid bboxes where w or h are 0
-                invalid = np.where(np.logical_or(bboxes[:, 2] == 0,
-                                                 bboxes[:, 3] == 0))
+                invalid = np.where(
+                    np.logical_or(bboxes[:, 2] == 0, bboxes[:, 3] == 0))
                 bboxes = np.delete(bboxes, invalid, 0)
 
                 # bounding boxes are 1 indexed so we keep them like that
@@ -158,15 +166,19 @@ class WIDERFace(dataset.Dataset):
             pad_mask = np.fliplr(pad_mask)
 
         # Get the ground truth class and regression maps
-        class_maps, regress_maps, iou = self.processor.get_heatmaps(bboxes,
-                                                                    pad_mask)
+        class_maps, regress_maps, iou = self.processor.get_heatmaps(
+            bboxes, pad_mask)
 
         if self.debug:
             # Visualize stuff
-            visualize.visualize_bboxes(Image.fromarray(img.astype('uint8'), 'RGB'),
-                                       bboxes)
-            self.processor.visualize_heatmaps(Image.fromarray(img.astype('uint8'), 'RGB'),
-                                              class_maps, regress_maps, self.templates, iou=iou)
+            visualize.visualize_bboxes(
+                Image.fromarray(img.astype('uint8'), 'RGB'), bboxes)
+            self.processor.visualize_heatmaps(Image.fromarray(
+                img.astype('uint8'), 'RGB'),
+                                              class_maps,
+                                              regress_maps,
+                                              self.templates,
+                                              iou=iou)
 
             # and now we exit
             exit(0)
@@ -196,8 +208,8 @@ class WIDERFace(dataset.Dataset):
                 print("Dataset index: \t", index)
                 print("image path:\t", image_path)
 
-            img, class_map, reg_map, bboxes = self.process_inputs(image,
-                                                                  bboxes)
+            img, class_map, reg_map, bboxes = self.process_inputs(
+                image, bboxes)
 
             # convert everything to tensors
             if self.transforms is not None:

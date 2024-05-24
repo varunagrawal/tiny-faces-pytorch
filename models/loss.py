@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from torch import nn
 
@@ -6,6 +5,7 @@ from .utils import balance_sampling
 
 
 class AvgMeter:
+
     def __init__(self):
         self.average = 0
         self.num_averaged = 0
@@ -49,16 +49,16 @@ class DetectionCriterion(nn.Module):
         label_class_np = class_map.cpu().numpy()
         # iterate through batch
         for idx in range(label_class_np.shape[0]):
-            label_class_np[idx, ...] = balance_sampling(label_class_np[idx, ...],
-                                                        pos_fraction=self.pos_fraction)
+            label_class_np[idx, ...] = balance_sampling(
+                label_class_np[idx, ...], pos_fraction=self.pos_fraction)
 
         class_map = torch.from_numpy(label_class_np).to(device)
 
         return class_map
 
     def hard_negative_mining(self, classification, class_map):
-        loss_class_map = nn.functional.soft_margin_loss(classification.detach(), class_map,
-                                                        reduction='none')
+        loss_class_map = nn.functional.soft_margin_loss(
+            classification.detach(), class_map, reduction='none')
         class_map[loss_class_map < 0.03] = 0
         return class_map
 
@@ -73,7 +73,7 @@ class DetectionCriterion(nn.Module):
 
         class_loss = self.classification_criterion(classification, class_map)
 
-       # weights used to mask out invalid regions i.e. where the label is 0
+        # weights used to mask out invalid regions i.e. where the label is 0
         class_mask = (class_map != 0).type(output.dtype)
         # Mask the classification loss
         self.masked_class_loss = class_mask * class_loss

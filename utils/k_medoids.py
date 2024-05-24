@@ -14,7 +14,8 @@ def kMedoids(distances, k):
     medoid_idxs = np.random.choice(n, size=k, replace=False)
     old_medoids_idxs = np.zeros(k)
 
-    while not np.all(medoid_idxs == old_medoids_idxs): # and n_iter_ < max_iter_
+    while not np.all(
+            medoid_idxs == old_medoids_idxs):  # and n_iter_ < max_iter_
         # retain a copy of the old assignments
         old_medoids_idxs = np.copy(medoid_idxs)
 
@@ -36,7 +37,8 @@ def update_medoids(distances, cluster_idxs, medoid_idxs):
             warnings.warn("Cluster {} is empty!".format(cluster_idx))
             continue
 
-        curr_cost = np.sum(distances[medoid_idxs[cluster_idx], cluster_idxs == cluster_idx])
+        curr_cost = np.sum(distances[medoid_idxs[cluster_idx],
+                                     cluster_idxs == cluster_idx])
 
         # Extract the distance matrix between the data points
         # inside the cluster_idx
@@ -60,6 +62,7 @@ def update_medoids(distances, cluster_idxs, medoid_idxs):
             # Find data points that belong to cluster_idx,
             # and assign the newly found medoid as the medoid
             # for cluster c
-            medoid_idxs[cluster_idx] = np.where(cluster_idxs == cluster_idx)[0][min_cost_idx]
+            medoid_idxs[cluster_idx] = np.where(
+                cluster_idxs == cluster_idx)[0][min_cost_idx]
 
     return medoid_idxs
