@@ -1,4 +1,8 @@
-"""Script to evaluate trained model."""
+"""
+Script to evaluate trained model.
+
+python evaluate.py data/WIDER/wider_face_split/wider_face_val_bbx_gt.txt --dataset-root data/WIDER --checkpoint weights/checkpoint_50.pth --split val
+"""
 
 import argparse
 

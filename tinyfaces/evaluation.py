@@ -58,7 +58,7 @@ def get_detections(model,
     for scale in scales_list:
         # scale the images
         scaled_image = transforms.functional.resize(image,
-                                                    np.int(min_side * scale))
+                                                    int(min_side * scale))
 
         # normalize the images
         img = img_transforms(scaled_image)
