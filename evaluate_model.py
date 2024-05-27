@@ -1,16 +1,16 @@
 """
-Script to evaluate trained model.
-
-python evaluate.py data/WIDER/wider_face_split/wider_face_val_bbx_gt.txt --dataset-root data/WIDER --checkpoint weights/checkpoint_50.pth --split val
+Script to evaluate model.
+Look at Makefile to see `evaluate` command.
 """
 
 import argparse
 
 import torch
+from torchvision import transforms
 from tqdm import tqdm
 
-from tinyfaces.evaluation import (get_detections, get_model, val_dataloader,
-                                  write_results)
+from tinyfaces.datasets import get_dataloader
+from tinyfaces.evaluation import get_detections, get_model, write_results
 
 
 def arguments():
@@ -29,6 +29,19 @@ def arguments():
     parser.add_argument("--debug", action="store_true")
 
     return parser.parse_args()
+
+
+def dataloader(args):
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    val_transforms = transforms.Compose([transforms.ToTensor(), normalize])
+
+    val_loader, templates = get_dataloader(args.dataset,
+                                           args,
+                                           train=False,
+                                           split=args.split,
+                                           img_transforms=val_transforms)
+    return val_loader, templates
 
 
 def run(model,
@@ -63,7 +76,7 @@ def main():
     else:
         device = torch.device('cpu')
 
-    val_loader, templates = val_dataloader(args)
+    val_loader, templates = dataloader(args)
     num_templates = templates.shape[0]
 
     model = get_model(args.checkpoint, num_templates=num_templates)

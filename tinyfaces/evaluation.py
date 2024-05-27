@@ -4,23 +4,9 @@ import numpy as np
 import torch
 from torchvision import transforms
 
-from tinyfaces.datasets import get_dataloader
 from tinyfaces.models.model import DetectionModel
 from tinyfaces.models.utils import get_bboxes
 from tinyfaces.utils.nms import nms
-
-
-def val_dataloader(args):
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-    val_transforms = transforms.Compose([transforms.ToTensor(), normalize])
-
-    val_loader, templates = get_dataloader(args.dataset,
-                                           args,
-                                           train=False,
-                                           split=args.split,
-                                           img_transforms=val_transforms)
-    return val_loader, templates
 
 
 def get_model(checkpoint=None, num_templates=25):
@@ -105,6 +91,7 @@ def write_results(dets, img_path, split, results_dir=None):
         results_dir.mkdir(parents=True)
 
     filename = results_dir / img_path.replace('jpg', 'txt')
+
     file_dir = filename.parent
     if not file_dir.exists():
         file_dir.mkdir(parents=True)

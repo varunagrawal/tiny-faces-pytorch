@@ -1,6 +1,9 @@
+"""
+Main model training training script.
+See Makefile `main` to see usage.
+"""
 import argparse
-import os
-import os.path as osp
+from pathlib import Path
 
 import torch
 from torch import optim
@@ -50,9 +53,9 @@ def main():
     loss_fn = DetectionCriterion(num_templates)
 
     # directory where we'll store model weights
-    weights_dir = "weights"
-    if not osp.exists(weights_dir):
-        os.mkdir(weights_dir)
+    weights_dir = Path("weights")
+    if not weights_dir.exists():
+        weights_dir.mkdir()
 
     # check for CUDA
     if torch.cuda.is_available():
