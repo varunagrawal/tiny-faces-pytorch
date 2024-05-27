@@ -56,7 +56,7 @@ def run(model,
     for _, (img, filename) in tqdm(enumerate(val_loader),
                                    total=len(val_loader)):
         dets = get_detections(model,
-                              img,
+                              img[0],
                               templates,
                               val_loader.dataset.rf,
                               val_loader.dataset.transforms,

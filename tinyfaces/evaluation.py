@@ -37,7 +37,7 @@ def get_detections(model,
     scales_list = [2**x for x in scales]
 
     # convert tensor to PIL image so we can perform resizing
-    image = transforms.functional.to_pil_image(img[0])
+    image = transforms.functional.to_pil_image(img)
 
     min_side = np.min(image.size)
 
