@@ -107,3 +107,8 @@ data/WIDER/WIDER_test
 data/WIDER/WIDER_train
 data/WIDER/WIDER_val
 data/WIDER/wider_face_split
+
+# JetBrains IDE
+.idea
+
+val_results
