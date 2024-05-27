@@ -10,7 +10,7 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from tinyfaces.datasets import get_dataloader
-from tinyfaces.evaluate import get_detections, get_model, write_results
+from tinyfaces.evaluation import get_detections, get_model, write_results
 
 
 def arguments():

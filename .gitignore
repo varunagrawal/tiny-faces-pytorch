@@ -104,3 +104,8 @@ ENV/
 weights/*.pth
 
 data/WIDER
+
+# JetBrains IDE
+.idea
+
+val_results

@@ -44,7 +44,7 @@ def get_detections(model,
     for scale in scales_list:
         # scale the images
         scaled_image = transforms.functional.resize(image,
-                                                    np.int(min_side * scale))
+                                                    int(min_side * scale))
 
         # normalize the images
         img = img_transforms(scaled_image)
@@ -84,17 +84,17 @@ def get_detections(model,
 
 
 def write_results(dets, img_path, split, results_dir=None):
-    results_dir = results_dir or "{0}_results".format(split)
+    results_dir = results_dir or f"{split}_results"
     results_dir = Path(results_dir)
 
     if not results_dir.exists():
-        results_dir.mkdir()
+        results_dir.mkdir(parents=True)
 
     filename = results_dir / img_path.replace('jpg', 'txt')
 
     file_dir = filename.parent
     if not file_dir.exists():
-        file_dir.mkdir()
+        file_dir.mkdir(parents=True)
 
     with open(filename, 'w') as f:
         f.write(img_path.split('/')[-1] + "\n")
@@ -105,6 +105,6 @@ def write_results(dets, img_path, split, results_dir=None):
             width = np.round(x[2] - x[0] + 1)
             height = np.round(x[3] - x[1] + 1)
             score = x[4]
-            d = "{0} {1} {2} {3} {4}\n".format(int(left), int(top), int(width),
-                                               int(height), score)
+            d = f"{int(left)} {int(top)} {int(width)} {int(height)} {score}\n"
+
             f.write(d)
