@@ -2,10 +2,10 @@ import logging
 from copy import deepcopy
 
 import numpy as np
+from torchvision.ops import nms
 
 from tinyfaces.datasets.dense_overlap import compute_dense_overlap
 from tinyfaces.metrics import rect_dist
-from tinyfaces.utils.nms import nms
 from tinyfaces.utils.visualize import draw_bounding_box
 
 logger = logging.getLogger("detector")
@@ -318,9 +318,8 @@ class DataProcessor:
 
         scores = cls_map[fy, fx, fc]
 
-        dets = np.hstack((bboxes, scores[:, np.newaxis]))
-        keep = nms(dets, nms_thresh)
-        bboxes = dets[keep][:, 0:4]
+        keep = nms(bboxes, scores, nms_thresh)
+        bboxes = bboxes[keep]
         # bbox_iou = best_iou[fy, fx, fc]
 
         # print("Best bounding box", bboxes)

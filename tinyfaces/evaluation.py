@@ -2,11 +2,11 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import torchvision
 from torchvision import transforms
 
 from tinyfaces.models.model import DetectionModel
 from tinyfaces.models.utils import get_bboxes
-from tinyfaces.utils.nms import nms
 
 
 def get_model(checkpoint=None, num_templates=25):
@@ -71,16 +71,20 @@ def get_detections(model,
                                       templates, prob_thresh, rf, scale)
 
         scales = np.ones((t_bboxes.shape[0], 1)) / scale
+
         # append scores at the end for NMS
         d = np.hstack((t_bboxes, scores))
 
         dets = np.vstack((dets, d))
 
+    scores = torch.from_numpy(dets[:, 4])
+    dets = torch.from_numpy(dets[:, :4])
+
     # Apply NMS
-    keep = nms(dets, nms_thresh)
+    keep = torchvision.ops.nms(dets, scores, nms_thresh)
     dets = dets[keep]
 
-    return dets
+    return dets.numpy()
 
 
 def write_results(dets, img_path, split, results_dir=None):
