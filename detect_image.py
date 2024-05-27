@@ -74,7 +74,7 @@ def main():
 
     draw = ImageDraw.Draw(image)
     for det in dets:
-        draw.rectangle(((det[0], det[1]), (det[2], det[3])))
+        draw.rectangle(((det[0], det[1]), (det[2], det[3])), width=4)
 
     image.show()
 
