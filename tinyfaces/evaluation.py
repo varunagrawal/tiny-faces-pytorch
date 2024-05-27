@@ -1,11 +1,8 @@
-import argparse
-import os
-import os.path as osp
+from pathlib import Path
 
 import numpy as np
 import torch
 from torchvision import transforms
-from tqdm import tqdm
 
 from tinyfaces.datasets import get_dataloader
 from tinyfaces.models.model import DetectionModel
@@ -13,25 +10,7 @@ from tinyfaces.models.utils import get_bboxes
 from tinyfaces.utils.nms import nms
 
 
-def arguments():
-    parser = argparse.ArgumentParser("Model Evaluator")
-    parser.add_argument("dataset")
-    parser.add_argument("--split", default="val")
-    parser.add_argument("--dataset-root")
-    parser.add_argument("--checkpoint",
-                        help="The path to the model checkpoint",
-                        default="")
-    parser.add_argument("--prob_thresh", type=float, default=0.03)
-    parser.add_argument("--nms_thresh", type=float, default=0.3)
-    parser.add_argument("--workers", default=8, type=int)
-    parser.add_argument("--batch_size", default=1, type=int)
-    parser.add_argument("--results_dir", default=None)
-    parser.add_argument("--debug", action="store_true")
-
-    return parser.parse_args()
-
-
-def dataloader(args):
+def val_dataloader(args):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     val_transforms = transforms.Compose([transforms.ToTensor(), normalize])
@@ -119,15 +98,16 @@ def get_detections(model,
 
 
 def write_results(dets, img_path, split, results_dir=None):
-    results_dir = results_dir or "{0}_results".format(split)
+    results_dir = results_dir or f"{split}_results"
+    results_dir = Path(results_dir)
 
-    if not osp.exists(results_dir):
-        os.makedirs(results_dir)
+    if not results_dir.exists():
+        results_dir.mkdir(parents=True)
 
-    filename = osp.join(results_dir, img_path.replace('jpg', 'txt'))
-    file_dir = os.path.dirname(filename)
-    if not osp.exists(file_dir):
-        os.makedirs(file_dir)
+    filename = results_dir / img_path.replace('jpg', 'txt')
+    file_dir = filename.parent
+    if not file_dir.exists():
+        file_dir.mkdir(parents=True)
 
     with open(filename, 'w') as f:
         f.write(img_path.split('/')[-1] + "\n")
@@ -138,60 +118,6 @@ def write_results(dets, img_path, split, results_dir=None):
             width = np.round(x[2] - x[0] + 1)
             height = np.round(x[3] - x[1] + 1)
             score = x[4]
-            d = "{0} {1} {2} {3} {4}\n".format(int(left), int(top), int(width),
-                                               int(height), score)
+            d = f"{int(left)} {int(top)} {int(width)} {int(height)} {score}\n"
+
             f.write(d)
-
-
-def run(model,
-        val_loader,
-        templates,
-        prob_thresh,
-        nms_thresh,
-        device,
-        split,
-        results_dir=None,
-        debug=False):
-    for _, (img, filename) in tqdm(enumerate(val_loader),
-                                   total=len(val_loader)):
-        dets = get_detections(model,
-                              img,
-                              templates,
-                              val_loader.dataset.rf,
-                              val_loader.dataset.transforms,
-                              prob_thresh,
-                              nms_thresh,
-                              device=device)
-
-        write_results(dets, filename[0], split, results_dir)
-    return dets
-
-
-def main():
-    args = arguments()
-
-    if torch.cuda.is_available():
-        device = torch.device('cuda:0')
-    else:
-        device = torch.device('cpu')
-
-    val_loader, templates = dataloader(args)
-    num_templates = templates.shape[0]
-
-    model = get_model(args.checkpoint, num_templates=num_templates)
-
-    with torch.no_grad():
-        # run model on val/test set and generate results files
-        run(model,
-            val_loader,
-            templates,
-            args.prob_thresh,
-            args.nms_thresh,
-            device,
-            args.split,
-            results_dir=args.results_dir,
-            debug=args.debug)
-
-
-if __name__ == "__main__":
-    main()
