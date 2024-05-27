@@ -34,7 +34,7 @@ Your data directory should look like this for WIDERFace
 
 ## Pretrained Weights
 
-You can find the pretrained weights which get the above mAP results [here](https://drive.google.com/open?id=1V8c8xkMrQaCnd3MVChvJ2Ge-DUfXPHNu).
+You can find the pretrained weights which get the above mAP results [here](https://www.dropbox.com/scl/fi/md0lxok2uh2achx8r58mk/checkpoint_50.pth?rlkey=9y1acwj1k6c57tqck14t6as18&dl=0).
 
 ## Training
 
