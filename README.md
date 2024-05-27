@@ -49,3 +49,8 @@ To run evaluation and generate the output files as per the WIDERFace specificati
 You can then use the dataset's `eval_tools` to generate the mAP numbers (this needs Matlab/Octave).
 
 Similarly, to run the model on the test set, run `make test` to generate results in the `test_results` directory.
+
+## Deployment
+
+To run the model on your own image, please use the `detect_image.py` script.
+You may have to adjust the probability and NMS thresholds to get the best results.
