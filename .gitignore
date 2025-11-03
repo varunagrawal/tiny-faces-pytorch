@@ -104,3 +104,5 @@ ENV/
 weights/*.pth
 
 data/WIDER
+
+**/.DS_Store
